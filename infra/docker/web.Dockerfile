@@ -12,4 +12,5 @@ COPY scripts/ scripts/
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @licitaclima/web... build
 FROM nginx:alpine
+COPY infra/docker/web-nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
