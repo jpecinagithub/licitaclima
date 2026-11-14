@@ -209,9 +209,10 @@ proveedor (503/pending explícitos, sin simulación de éxito).
     el expediente no tenga documentos ni análisis genérico (verificado
     2026-11-14 con 2167/2026 y 2754/2026: `sin_documentos`, 0
     requisitos) y el digest lo lista igualmente. Causa: el job de
-    Fase C no exige extracción previa. Decisión pendiente: si publicar
-    debe exigir análisis genérico o si la ficha sin requisitos es
-    aceptable como «publicado sin pliegos».
+    Fase C no exige extracción previa. **Decisión de Jon 2026-11-14:
+    aceptado como «publicado sin pliegos»** — la ficha sin requisitos
+    se publica y se lista igual; sin cambio de código (el
+    comportamiento ya era ese).
 
 ## 6. Datos de la verificación E2E (para reproducir)
 
