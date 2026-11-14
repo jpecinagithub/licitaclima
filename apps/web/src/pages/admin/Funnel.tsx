@@ -1,4 +1,4 @@
-import { apiGet } from '../../lib/api.js';
+import { getAdminFunnel } from '../../lib/api.js';
 import type { FunnelData } from '../../lib/admin.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading, Nd } from '../../components/ui.js';
@@ -13,7 +13,7 @@ const PASOS: { key: keyof Omit<FunnelData, 'canal'>; label: string }[] = [
 ];
 
 export function AdminFunnelPage() {
-  const embudo = useApi(() => apiGet<FunnelData[]>('/admin/funnel'));
+  const embudo = useApi(getAdminFunnel);
   return (
     <div>
       <h1>Embudo por canal</h1>

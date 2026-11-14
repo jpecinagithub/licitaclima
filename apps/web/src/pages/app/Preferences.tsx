@@ -1,22 +1,14 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { apiGet, apiPatch } from '../../lib/api.js';
+import { getNotificationPreferences, updateNotificationPreferences } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { ErrorState, Loading } from '../../components/ui.js';
-
-interface Prefs {
-  resumen: 'semanal';
-  alertas: boolean;
-  alertasNuevasOportunidades: boolean;
-  alertasRectificaciones: boolean;
-  emailResumen: boolean;
-}
 
 const NOTA_PENDIENTE =
   'Las preferencias de avisos (GET/PATCH /notification-preferences) aún no están disponibles (Fase D).';
 
 export function PreferencesPage() {
-  const prefs = useApi(() => apiGet<Prefs>('/notification-preferences'));
+  const prefs = useApi(getNotificationPreferences);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
@@ -26,7 +18,7 @@ export function PreferencesPage() {
     setGuardando(true);
     setMensaje('');
     try {
-      await apiPatch('/notification-preferences', {
+      await updateNotificationPreferences({
         resumen: 'semanal',
         alertas: form.get('alertas') === 'on',
         alertasNuevasOportunidades: form.get('alertasNuevas') === 'on',

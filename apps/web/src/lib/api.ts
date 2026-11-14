@@ -6,8 +6,21 @@
 // Ninguna de estas rutas está verificada contra un backend en marcha a día de hoy:
 // apps/api es aún un esqueleto (server.ts) y el API real lo construye otro bloque.
 import type {
+  AdminCustomer,
+  CommsData,
+  FinancesData,
+  FunnelData,
+  PausesData,
+  QualityData,
+  SourcesData,
+  AdminSettingsData,
+  AdminSummaryData,
+  AdminSupportData,
+} from './admin.js';
+import type {
   Analysis,
   AppNotification,
+  AuditEntry,
   ChatMessage,
   CompanyProfile,
   Me,
@@ -138,3 +151,34 @@ export const submitLead = (body: { email: string; actividad: string; provincia: 
   apiPost<{ ok: boolean }>('/leads', body);
 export const createSupportTicket = (body: { asunto: string; mensaje: string; prioridad: string }) =>
   apiPost<{ id: string }>('/support/tickets', body);
+export const getSupportTickets = () =>
+  apiGet<{ id: string; asunto: string; estado: string; prioridad: string; createdAt: string }[]>(
+    '/support/tickets',
+  );
+
+export interface NotificationPreferences {
+  resumen: 'semanal';
+  alertas: boolean;
+  alertasNuevasOportunidades: boolean;
+  alertasRectificaciones: boolean;
+  emailResumen: boolean;
+}
+export const getNotificationPreferences = () =>
+  apiGet<NotificationPreferences>('/notification-preferences');
+export const updateNotificationPreferences = (prefs: NotificationPreferences) =>
+  apiPatch<NotificationPreferences>('/notification-preferences', prefs);
+
+// --- Admin (/admin/*) — requieren rol owner/admin en servidor ---
+export const getAdminSummary = () => apiGet<AdminSummaryData>('/admin/summary');
+export const getAdminFunnel = () => apiGet<FunnelData[]>('/admin/funnel');
+export const getAdminFinances = () => apiGet<FinancesData>('/admin/finances');
+export const getAdminCustomers = () => apiGet<AdminCustomer[]>('/admin/customers');
+export const getAdminQuality = () => apiGet<QualityData>('/admin/quality');
+export const getAdminSources = () => apiGet<SourcesData[]>('/admin/sources');
+export const getAdminComms = () => apiGet<CommsData>('/admin/communications');
+export const getAdminSupport = () => apiGet<AdminSupportData>('/admin/support');
+export const getAdminSettings = () => apiGet<AdminSettingsData>('/admin/settings');
+export const getAdminAudit = () => apiGet<AuditEntry[]>('/admin/audit');
+export const getPauses = () => apiGet<PausesData>('/admin/pauses');
+export const setPause = (key: keyof PausesData, value: boolean) =>
+  apiPost<PausesData>('/admin/pauses', { [key]: value });

@@ -1,10 +1,9 @@
-import { apiGet } from '../../lib/api.js';
-import type { AdminSupportData, CommsData } from '../../lib/admin.js';
+import { getAdminComms, getAdminSupport } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading, Nd, Stat } from '../../components/ui.js';
 
 export function AdminCommsPage() {
-  const comms = useApi(() => apiGet<CommsData>('/admin/communications'));
+  const comms = useApi(getAdminComms);
   const d = comms.data;
   return (
     <div>
@@ -38,7 +37,7 @@ export function AdminCommsPage() {
 }
 
 export function AdminSupportPage() {
-  const soporte = useApi(() => apiGet<AdminSupportData>('/admin/support'));
+  const soporte = useApi(getAdminSupport);
   const d = soporte.data;
   return (
     <div>

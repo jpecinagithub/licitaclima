@@ -1,20 +1,12 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { apiGet, createSupportTicket } from '../../lib/api.js';
+import { createSupportTicket, getSupportTickets } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading } from '../../components/ui.js';
 import { formatInstante } from '../../lib/format.js';
 
-interface Ticket {
-  id: string;
-  asunto: string;
-  estado: string;
-  prioridad: string;
-  createdAt: string;
-}
-
 export function SupportPage() {
-  const tickets = useApi(() => apiGet<Ticket[]>('/support/tickets'));
+  const tickets = useApi(getSupportTickets);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
 

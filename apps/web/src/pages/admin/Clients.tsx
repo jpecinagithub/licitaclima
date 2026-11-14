@@ -1,11 +1,10 @@
-import { apiGet } from '../../lib/api.js';
-import type { AdminCustomer } from '../../lib/admin.js';
+import { getAdminCustomers } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading, Nd } from '../../components/ui.js';
 import { formatFecha } from '../../lib/format.js';
 
 export function AdminClientsPage() {
-  const clientes = useApi(() => apiGet<AdminCustomer[]>('/admin/customers'));
+  const clientes = useApi(getAdminCustomers);
   return (
     <div>
       <h1>Clientes</h1>

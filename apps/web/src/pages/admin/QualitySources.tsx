@@ -1,11 +1,10 @@
-import { apiGet } from '../../lib/api.js';
-import type { QualityData, SourcesData } from '../../lib/admin.js';
+import { getAdminQuality, getAdminSources } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading, Nd, Stat } from '../../components/ui.js';
 import { formatFecha, formatInstante } from '../../lib/format.js';
 
 export function AdminQualityPage() {
-  const calidad = useApi(() => apiGet<QualityData>('/admin/quality'));
+  const calidad = useApi(getAdminQuality);
   const d = calidad.data;
   return (
     <div>
@@ -50,7 +49,7 @@ export function AdminQualityPage() {
 }
 
 export function AdminSourcesPage() {
-  const fuentes = useApi(() => apiGet<SourcesData[]>('/admin/sources'));
+  const fuentes = useApi(getAdminSources);
   return (
     <div>
       <h1>Fuentes y operaciones</h1>

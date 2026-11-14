@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { apiGet, apiPost } from '../lib/api.js';
-import type { PauseKey, PausesData } from '../lib/admin.js';
+import { getPauses, setPause } from '../lib/api.js';
+import type { PauseKey } from '../lib/admin.js';
 import { PAUSE_LABELS } from '../lib/admin.js';
 import { useApi } from '../lib/useApi.js';
 import { ErrorState, Loading } from './ui.js';
@@ -12,7 +12,7 @@ import { ErrorState, Loading } from './ui.js';
  * (el backend lo registra; aquí se muestra la confirmación).
  */
 export function PauseControls() {
-  const estado = useApi(() => apiGet<PausesData>('/admin/pauses'));
+  const estado = useApi(getPauses);
   const [mensaje, setMensaje] = useState('');
   const [trabajando, setTrabajando] = useState<PauseKey | null>(null);
 
@@ -20,7 +20,7 @@ export function PauseControls() {
     setTrabajando(key);
     setMensaje('');
     try {
-      await apiPost('/admin/pauses', { [key]: !actual });
+      await setPause(key, !actual);
       setMensaje(`Pausa «${key}» ${!actual ? 'activada' : 'desactivada'} y registrada en auditoría.`);
       estado.reload();
     } catch {

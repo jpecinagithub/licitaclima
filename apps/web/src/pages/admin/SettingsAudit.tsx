@@ -1,12 +1,10 @@
-import { apiGet } from '../../lib/api.js';
-import type { AdminSettingsData } from '../../lib/admin.js';
-import type { AuditEntry } from '../../lib/types.js';
+import { getAdminAudit, getAdminSettings } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { EmptyState, ErrorState, Loading, Nd } from '../../components/ui.js';
 import { formatInstante } from '../../lib/format.js';
 
 export function AdminSettingsPage() {
-  const conf = useApi(() => apiGet<AdminSettingsData>('/admin/settings'));
+  const conf = useApi(getAdminSettings);
   const d = conf.data;
   return (
     <div>
@@ -101,7 +99,7 @@ export function AdminSettingsPage() {
 }
 
 export function AdminAuditPage() {
-  const auditoria = useApi(() => apiGet<AuditEntry[]>('/admin/audit'));
+  const auditoria = useApi(getAdminAudit);
   return (
     <div>
       <h1>Auditoría</h1>

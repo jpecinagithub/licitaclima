@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { PLAN } from '@licitaclima/config';
-import { formatEur } from '../lib/format.js';
-import { COVERAGE, SAMPLE_OPPORTUNITIES } from '../lib/sample.js';
-import { OpportunityCard } from '../components/OpportunityCard.js';
+import { formatEur } from '../../lib/format.js';
+import { COVERAGE, SAMPLE_OPPORTUNITIES } from '../../lib/sample.js';
+import { OpportunityCard } from '../../components/OpportunityCard.js';
 
 export function HomePage() {
   const destacada = SAMPLE_OPPORTUNITIES[0];

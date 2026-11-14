@@ -1,12 +1,11 @@
-import { apiGet } from '../../lib/api.js';
-import type { AdminSummaryData } from '../../lib/admin.js';
+import { getAdminSummary } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { ErrorState, Loading, Stat } from '../../components/ui.js';
 import { PauseControls } from '../../components/PauseControls.js';
 import { formatEur } from '../../lib/format.js';
 
 export function AdminDashboardPage() {
-  const resumen = useApi(() => apiGet<AdminSummaryData>('/admin/summary'));
+  const resumen = useApi(getAdminSummary);
   return (
     <div>
       <h1>Resumen</h1>

@@ -1,5 +1,4 @@
-import { apiGet } from '../../lib/api.js';
-import type { FinancesData } from '../../lib/admin.js';
+import { getAdminFinances } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { ErrorState, Loading } from '../../components/ui.js';
 import { formatEur } from '../../lib/format.js';
@@ -15,7 +14,7 @@ function Row({ label, value, note }: { label: string; value: number | null; note
 }
 
 export function AdminFinancesPage() {
-  const fin = useApi(() => apiGet<FinancesData>('/admin/finances'));
+  const fin = useApi(getAdminFinances);
   const d = fin.data;
   return (
     <div>
