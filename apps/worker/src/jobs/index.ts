@@ -23,6 +23,7 @@ import { runIngest } from './ingest.js';
 import { runDocuments } from './documents.js';
 import { runExtract } from './extract.js';
 import { runAnalyze, runPublish } from './analyze.js';
+import { runPersonalizedAnalyze } from './personalized.js';
 import { runWeeklyDigest } from './digest-weekly.js';
 import { runAlerts } from './alerts.js';
 import { processPendingStripeEvents, reconcileBilling } from './billing.js';
@@ -31,6 +32,7 @@ import type { WorkerStore } from '../db.js';
 
 export type JobType =
   | 'ingest' | 'documents' | 'extract' | 'analyze' | 'publish' | 'digest-weekly' | 'alerts'
+  | 'personalized-analyze'
   | 'billing-reconcile' | 'billing-events' | 'email-outbox';
 
 export interface DispatchOpts {
@@ -64,6 +66,17 @@ export async function dispatchJob(
       return runExtract(store, storage, { tenderId: String(payload['tenderId']) });
     case 'analyze':
       return runAnalyze(store, { tenderId: String(payload['tenderId']) });
+    case 'personalized-analyze':
+      return runPersonalizedAnalyze(
+        store,
+        storage,
+        {
+          tenderId: String(payload['tenderId']),
+          organizationId: String(payload['organizationId']),
+          personalizedAnalysisId: String(payload['personalizedAnalysisId']),
+        },
+        requireDb(opts),
+      );
     case 'publish':
       return runPublish(store, { tenderId: String(payload['tenderId']) });
     case 'digest-weekly':

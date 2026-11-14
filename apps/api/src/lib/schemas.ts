@@ -101,3 +101,30 @@ export const emailWebhookSchema = z.object({
   providerEventId: z.string().trim().max(200).optional(),
   outboxId: z.string().uuid().optional(),
 });
+
+// ---- API de lectura (block/api-lectura, prompt §5 y §8) ----
+
+/** Estado personal de una oportunidad (tabla favorites). */
+export const personalStatusSchema = z.enum(['pendiente', 'estudiar', 'descartada', 'presentada']);
+
+export const personalStatusBodySchema = z.object({
+  estado: personalStatusSchema,
+});
+
+/** Muestra pública / lead (la web envía exactamente estos campos). */
+export const leadSchema = z.object({
+  email: emailSchema,
+  actividad: z.string().trim().min(2, 'La actividad es obligatoria.').max(500),
+  provincia: z.string().trim().min(1, 'La provincia es obligatoria.').max(100),
+  consentimientoMarketing: z.boolean(),
+});
+
+/** Pregunta de chat contextual sobre un análisis (la web envía `texto`). */
+export const analysisQuestionSchema = z.object({
+  texto: z.string().trim().min(1, 'La pregunta no puede estar vacía.').max(2000),
+  // Alias aceptado por tolerancia (la web usa `texto`).
+  question: z.string().trim().min(1).max(2000).optional(),
+});
+
+export type LeadInput = z.infer<typeof leadSchema>;
+export type AnalysisQuestionInput = z.infer<typeof analysisQuestionSchema>;

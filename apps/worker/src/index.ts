@@ -45,6 +45,8 @@ async function main(): Promise<void> {
     if (tenderId) payload['tenderId'] = tenderId;
     const org = argValue(argv, '--org');
     if (org) payload['organizationId'] = org;
+    const analysis = argValue(argv, '--analysis');
+    if (analysis) payload['personalizedAnalysisId'] = analysis;
     const limit = argValue(argv, '--limit');
     if (limit) payload['limit'] = Number(limit);
     const result = await dispatchJob(store, type, payload, { db });
@@ -77,6 +79,7 @@ async function main(): Promise<void> {
     'LicitaClima worker — uso:',
     '  run ingest --feed 643|1044 [--max-pages N] | run documents --tender <id> | run extract --tender <id>',
     '  run analyze --tender <id> | run publish --tender <id> | run alerts --tender <id>',
+    '  run personalized-analyze --tender <id> --org <id> --analysis <id>',
     '  run digest-weekly --org <id> | run billing-reconcile | run billing-events [--limit N] | run email-outbox [--limit N]',
     '  run-due [--limit N] | enqueue-ingest | digest --org <id> | schedule',
   ].join('\n'));

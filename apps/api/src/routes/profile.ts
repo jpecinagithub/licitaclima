@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { auditLogs, companyProfiles, profileVersions } from '@licitaclima/db';
 import type { RouteOptions } from './auth.js';
 import { requireDb } from './auth.js';
@@ -119,5 +119,26 @@ export const profileRoutes: FastifyPluginAsync<RouteOptions> = async (app, opts)
       ...toJson(updated),
       note: 'Perfil guardado. El recálculo de encaje con las licitaciones queda pendiente y lo ejecutará el worker (Fase C).',
     });
+  });
+
+  // Historial de versiones del perfil (block/api-lectura; la web lo llama).
+  app.get('/company-profile/versions', async (request, reply) => {
+    const ctx = await authenticate(request, requireDb(db));
+    const { organizationId } = requireOrg(ctx);
+    const rows = await requireDb(db)
+      .select()
+      .from(profileVersions)
+      .where(eq(profileVersions.organizationId, organizationId))
+      .orderBy(desc(profileVersions.version));
+    return reply.send(
+      rows.map((r) => ({
+        id: r.id,
+        profileId: r.profileId,
+        version: r.version,
+        data: r.data,
+        changeReason: r.changeReason,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    );
   });
 };

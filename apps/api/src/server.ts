@@ -33,6 +33,19 @@ export function buildServer(opts: BuildServerOptions = {}) {
     if (err.validation) {
       return reply.code(400).send({ error: { code: 'validation_error', message: 'Petición no válida.' } });
     }
+    // Errores del parser de contenido de Fastify (JSON no válido, cuerpo
+    // vacío, etc.): son errores 400 del cliente, no 500 internos.
+    const fastifyCode = (err as { code?: unknown }).code;
+    if (typeof fastifyCode === 'string' && fastifyCode.startsWith('FST_ERR_CTP_')) {
+      return reply.code(400).send({ error: { code: 'validation_error', message: 'Petición no válida.' } });
+    }
+    // El rate limit de Fastify no es un ApiError: sin esto llegaría como 500
+    // «Error interno» en vez del 429 que documenta el OpenAPI.
+    if (err.statusCode === 429) {
+      return reply
+        .code(429)
+        .send({ error: { code: 'rate_limited', message: 'Demasiadas solicitudes. Inténtalo más tarde.' } });
+    }
     const { status, body } = toErrorBody(err);
     if (status >= 500) app.log.error(err instanceof Error ? err : new Error('unknown error'));
     return reply.code(status).send(body);

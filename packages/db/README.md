@@ -24,9 +24,11 @@ Versionadas con drizzle-kit en `./drizzle/` (`0000_*.sql`, `0001_*.sql`).
 ```bash
 # Generar una migración tras cambiar el esquema
 pnpm --filter @licitaclima/db generate
-# Aplicarla (PostgreSQL real)
-DATABASE_URL=postgres://licitaclima:licitaclima@localhost:5432/licitaclima \
-  pnpm --filter @licitaclima/db migrate
+# Aplicarla (PostgreSQL real). Lee DATABASE_URL del .env del repo si existe
+# (dotenv); si no hay .env, exportar DATABASE_URL antes.
+pnpm --filter @licitaclima/db migrate
+# Sembrar los 913 expedientes reales del pull de 30 días (también lee .env)
+pnpm --filter @licitaclima/db seed
 ```
 
 `src/migrate.ts` aplica en orden los `.sql` pendientes y registra el hash
@@ -60,5 +62,11 @@ DATABASE_URL=postgres://licitaclima:licitaclima@localhost:5432/licitaclima \
 ```bash
 docker compose up db   # o PostgreSQL 16 instalado en el host
 cp .env.example .env   # DATABASE_URL=postgres://licitaclima:licitaclima@localhost:5432/licitaclima
-pnpm db:migrate
+pnpm db:migrate        # lee DATABASE_URL del .env del repo (dotenv)
+pnpm db:seed           # igual; siembra los 913 expedientes reales
 ```
+
+> Nota: `pnpm db:migrate` y `pnpm db:seed` funcionan con el `.env` del
+> repo sin exportar nada: `src/migrate.ts` y `src/seed.ts` cargan
+> `dotenv` al arrancar. Las variables ya definidas en el entorno no se
+> sobrescriben.
