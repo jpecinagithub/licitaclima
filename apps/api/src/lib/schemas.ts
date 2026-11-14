@@ -52,3 +52,52 @@ export const companyProfileSchema = z.object({
 });
 
 export type CompanyProfileInput = z.infer<typeof companyProfileSchema>;
+
+// ---- Fase D: soporte, consentimientos, notificaciones, cuotas, admin ----
+
+export const supportTicketSchema = z.object({
+  subject: z.string().trim().min(2, 'El asunto es obligatorio.').max(200),
+  message: z.string().trim().min(1, 'Describe tu consulta.').max(5000),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional().default('normal'),
+});
+
+export const supportMessageSchema = z.object({
+  message: z.string().trim().min(1, 'El mensaje no puede estar vacío.').max(5000),
+});
+
+export const supportTicketStatusSchema = z.object({
+  status: z.enum(['open', 'pending', 'resolved', 'closed']),
+});
+
+export const consentSchema = z.object({
+  purpose: z.enum(['marketing', 'newsletter', 'service_alerts', 'analytics']),
+  granted: z.boolean(),
+  textVersion: z.string().trim().min(1).max(100),
+});
+
+export const notificationPreferencesSchema = z.object({
+  serviceAlerts: z.boolean(),
+  weeklyDigest: z.boolean(),
+});
+
+export const usageReserveSchema = z.object({
+  kind: z.enum(['personalized_analysis', 'chat_question']),
+  referenceId: z.string().uuid().optional(),
+  idempotencyKey: z.string().trim().min(1).max(128),
+});
+
+export const usageSettleSchema = z.object({
+  reserveIdempotencyKey: z.string().trim().min(1).max(128),
+});
+
+export const adminSettingsSchema = z.object({
+  key: z.string().trim().min(1).max(100),
+  value: z.unknown(),
+});
+
+export const emailWebhookSchema = z.object({
+  email: emailSchema,
+  eventType: z.enum(['delivered', 'bounced', 'complained', 'opened', 'clicked']),
+  providerEventId: z.string().trim().max(200).optional(),
+  outboxId: z.string().uuid().optional(),
+});

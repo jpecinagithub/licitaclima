@@ -2,9 +2,18 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
   adminLoginSchema,
   adminReauthSchema,
+  adminSettingsSchema,
   companyProfileSchema,
+  consentSchema,
   consumeLinkSchema,
+  emailWebhookSchema,
+  notificationPreferencesSchema,
   requestLinkSchema,
+  supportMessageSchema,
+  supportTicketSchema,
+  supportTicketStatusSchema,
+  usageReserveSchema,
+  usageSettleSchema,
   verifyLinkSchema,
 } from './lib/schemas.js';
 
@@ -39,13 +48,20 @@ export function buildOpenApiDocument() {
       title: 'LicitaClima API',
       version: '0.1.0',
       description:
-        'API de LicitaClima (Fase B): autenticación por magic link, sesiones, perfil de empresa. ' +
-        'Dinero en EUR (numeric), instantes en UTC, español de España.',
+        'API de LicitaClima (Fases B+D): autenticación por magic link, sesiones, perfil de empresa, ' +
+        'facturación Stripe (solo test), cuotas, soporte, notificaciones y panel admin. ' +
+        'Dinero en EUR (numeric), instantes en UTC, español de España. ' +
+        'Stripe y correo sin configurar quedan PENDIENTE (checkout 503, outbox sin envío).',
     },
     servers: [{ url: 'http://localhost:3001', description: 'Desarrollo local' }],
     tags: [
       { name: 'auth', description: 'Magic link, sesiones y administración' },
       { name: 'profile', description: 'Perfil de empresa' },
+      { name: 'billing', description: 'Suscripción Stripe (solo test), checkout, portal, webhook' },
+      { name: 'usage', description: 'Cuota del periodo de suscripción (análisis y chat)' },
+      { name: 'support', description: 'Tickets de soporte vinculados a la organización' },
+      { name: 'notifications', description: 'Notificaciones, preferencias, consentimientos y baja' },
+      { name: 'admin', description: 'Panel de administración (resumen, finanzas, clientes, auditoría)' },
     ],
     paths: {
       '/auth/request-link': {
@@ -156,6 +172,319 @@ export function buildOpenApiDocument() {
             '400': { description: 'Perfil no válido.', content: { 'application/json': { schema: errorBody } } },
             '401': { description: 'No autenticado.', content: { 'application/json': { schema: errorBody } } },
           },
+        },
+      },
+      '/billing/subscription': {
+        get: {
+          tags: ['billing'],
+          summary: 'Suscripción, plan, cuota y estado de Stripe',
+          responses: {
+            '200': { description: 'Suscripción vigente (free si no hay pago).' },
+            '401': { description: 'No autenticado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/billing/checkout': {
+        post: {
+          tags: ['billing'],
+          summary: 'Crear Checkout Session de Stripe (solo test)',
+          description:
+            'Sin claves Stripe responde 503 stripe_not_configured. El acceso NO se activa por la URL de éxito: solo por webhook verificado.',
+          responses: {
+            '200': { description: 'Sesión creada (url).' },
+            '409': { description: 'Ya hay una suscripción activa.', content: { 'application/json': { schema: errorBody } } },
+            '503': { description: 'Stripe no configurado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/billing/portal': {
+        post: {
+          tags: ['billing'],
+          summary: 'Sesión del portal de cliente de Stripe',
+          responses: {
+            '200': { description: 'Sesión creada (url).' },
+            '503': { description: 'Stripe no configurado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/billing/cancel': {
+        post: {
+          tags: ['billing'],
+          summary: 'Cancelar al final del periodo pagado',
+          description: 'Mantiene el acceso hasta el final del periodo pagado.',
+          responses: {
+            '200': { description: 'Cancelación registrada.' },
+            '409': { description: 'No hay suscripción activa.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/webhooks/stripe': {
+        post: {
+          tags: ['billing'],
+          summary: 'Webhook de Stripe (firma verificada con raw body)',
+          description: 'Persiste el evento (event_id único) y encola su procesado; el worker lo aplica.',
+          responses: {
+            '200': { description: 'Evento recibido.' },
+            '400': { description: 'Firma no válida.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/usage': {
+        get: {
+          tags: ['usage'],
+          summary: 'Cuota del periodo de suscripción',
+          responses: { '200': { description: 'Uso de análisis y chat del periodo vigente.' } },
+        },
+      },
+      '/usage/reserve': {
+        post: {
+          tags: ['usage'],
+          summary: 'Reservar una unidad de cuota (atómica, idempotente)',
+          description: 'Revisitar un análisis o una rectificación del mismo expediente no consume.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(usageReserveSchema) } } },
+          responses: {
+            '200': { description: 'Reserva realizada (o reutilización sin consumo).' },
+            '409': { description: 'Cuota agotada o en pausa.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/usage/confirm': {
+        post: {
+          tags: ['usage'],
+          summary: 'Confirmar la entrega (no consume extra)',
+          requestBody: { required: true, content: { 'application/json': { schema: json(usageSettleSchema) } } },
+          responses: { '200': { description: 'Confirmación registrada.' } },
+        },
+      },
+      '/usage/release': {
+        post: {
+          tags: ['usage'],
+          summary: 'Liberar la unidad reservada (fallo)',
+          requestBody: { required: true, content: { 'application/json': { schema: json(usageSettleSchema) } } },
+          responses: { '200': { description: 'Liberación registrada.' } },
+        },
+      },
+      '/support/tickets': {
+        get: {
+          tags: ['support'],
+          summary: 'Listar mis tickets de soporte',
+          responses: { '200': { description: 'Tickets de la organización.' } },
+        },
+        post: {
+          tags: ['support'],
+          summary: 'Crear un ticket de soporte',
+          description: 'El agente nunca promete compensaciones ni modifica datos sensibles desde texto libre.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(supportTicketSchema) } } },
+          responses: { '201': { description: 'Ticket creado.' } },
+        },
+      },
+      '/support/tickets/{id}': {
+        get: {
+          tags: ['support'],
+          summary: 'Ver un ticket con su conversación',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '200': { description: 'Ticket y mensajes.' },
+            '404': { description: 'No encontrado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+        patch: {
+          tags: ['support'],
+          summary: 'Resolver o cerrar mi ticket',
+          requestBody: { required: true, content: { 'application/json': { schema: json(supportTicketStatusSchema) } } },
+          responses: { '200': { description: 'Ticket actualizado.' } },
+        },
+      },
+      '/support/tickets/{id}/messages': {
+        post: {
+          tags: ['support'],
+          summary: 'Añadir un mensaje al ticket',
+          requestBody: { required: true, content: { 'application/json': { schema: json(supportMessageSchema) } } },
+          responses: { '201': { description: 'Mensaje añadido.' } },
+        },
+      },
+      '/notifications': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Notificaciones de la organización',
+          responses: { '200': { description: 'Notificaciones y no leídas.' } },
+        },
+      },
+      '/notification-preferences': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Preferencias de avisos',
+          responses: { '200': { description: 'Preferencias vigentes.' } },
+        },
+        patch: {
+          tags: ['notifications'],
+          summary: 'Actualizar preferencias (desactivar alertas no cancela la suscripción)',
+          requestBody: { required: true, content: { 'application/json': { schema: json(notificationPreferencesSchema) } } },
+          responses: { '200': { description: 'Preferencias guardadas.' } },
+        },
+      },
+      '/consents': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Consentimientos vigentes por propósito',
+          responses: { '200': { description: 'Último consentimiento por propósito.' } },
+        },
+        post: {
+          tags: ['notifications'],
+          summary: 'Registrar un consentimiento (con versión del texto)',
+          description: 'Boletines y marketing exigen doble confirmación.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(consentSchema) } } },
+          responses: { '201': { description: 'Consentimiento registrado.' } },
+        },
+      },
+      '/notifications/unsubscribe': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Baja de marketing por enlace firmado',
+          description: 'La baja no cancela comunicaciones de cuenta ni la suscripción.',
+          parameters: [{ name: 'token', in: 'query', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Baja registrada.' } },
+        },
+      },
+      '/webhooks/email': {
+        post: {
+          tags: ['notifications'],
+          summary: 'Webhook del proveedor de correo (entregas, rebotes, quejas)',
+          description: 'Sin proveedor configurado responde 503. Los rebotes/quejas crean supresión automática.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(emailWebhookSchema) } } },
+          responses: { '200': { description: 'Evento registrado.' } },
+        },
+      },
+      '/admin/summary': {
+        get: {
+          tags: ['admin'],
+          summary: 'Resumen: clientes activos, MRR, altas, bajas, uso y excepciones',
+          responses: { '200': { description: 'Resumen del panel.' }, '403': { description: 'Se requiere rol de administrador.', content: { 'application/json': { schema: errorBody } } } },
+        },
+      },
+      '/admin/funnel': {
+        get: {
+          tags: ['admin'],
+          summary: 'Embudo por canal (datos ausentes como N/D)',
+          responses: { '200': { description: 'Embudo.' } },
+        },
+      },
+      '/admin/finance': {
+        get: {
+          tags: ['admin'],
+          summary: 'Finanzas: MRR sin impuestos, reembolsos, contribución estimada',
+          description: 'No se confunde margen con beneficio neto; LTV solo como estimación.',
+          responses: { '200': { description: 'Finanzas.' } },
+        },
+      },
+      '/admin/customers': {
+        get: {
+          tags: ['admin'],
+          summary: 'Clientes: plan, cuota, incidencias y estado',
+          responses: { '200': { description: 'Clientes.' } },
+        },
+      },
+      '/admin/quality': {
+        get: {
+          tags: ['admin'],
+          summary: 'Calidad: requisitos sin evidencia, fallos, bloqueos',
+          responses: { '200': { description: 'Calidad.' } },
+        },
+      },
+      '/admin/sources': {
+        get: {
+          tags: ['admin'],
+          summary: 'Fuentes y operaciones: última ejecución, cola y reintentos',
+          responses: { '200': { description: 'Fuentes y operaciones.' } },
+        },
+      },
+      '/admin/comms': {
+        get: {
+          tags: ['admin'],
+          summary: 'Comunicaciones: envíos, rebotes, quejas, bajas y cola',
+          responses: { '200': { description: 'Comunicaciones.' } },
+        },
+      },
+      '/admin/support': {
+        get: {
+          tags: ['admin'],
+          summary: 'Soporte: tickets por prioridad, SLA interno y escalados',
+          responses: { '200': { description: 'Soporte.' } },
+        },
+      },
+      '/admin/settings': {
+        get: {
+          tags: ['admin'],
+          summary: 'Configuración versionada y estado de pausas',
+          responses: { '200': { description: 'Configuración.' } },
+        },
+        patch: {
+          tags: ['admin'],
+          summary: 'Actualizar configuración (requiere reautenticación MFA)',
+          description: 'Pausas: pause.capture, pause.campaigns, pause.new_analyses, pause.non_essential_emails. No bloquean acceso ni cancelación.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(adminSettingsSchema) } } },
+          responses: { '200': { description: 'Configuración guardada.' } },
+        },
+      },
+      '/admin/customers/{id}': {
+        get: {
+          tags: ['admin'],
+          summary: 'Detalle de cliente (acceso auditado)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Cliente, suscripción, cuota y tickets.' } },
+        },
+      },
+      '/admin/health': {
+        get: {
+          tags: ['admin'],
+          summary: 'Salud de integraciones (stripe/email/llm)',
+          responses: { '200': { description: 'Estado por integración (pending = PENDIENTE).' } },
+        },
+      },
+      '/admin/support/tickets/{id}/messages': {
+        post: {
+          tags: ['admin'],
+          summary: 'Respuesta del administrador en un ticket',
+          description: 'La respuesta no promete compensaciones ni modifica datos sensibles desde texto libre.',
+          requestBody: { required: true, content: { 'application/json': { schema: json(supportMessageSchema) } } },
+          responses: { '201': { description: 'Mensaje añadido.' } },
+        },
+      },
+      '/admin/support/tickets/{id}/status': {
+        post: {
+          tags: ['admin'],
+          summary: 'Cambiar el estado de un ticket (admin)',
+          requestBody: { required: true, content: { 'application/json': { schema: json(supportTicketStatusSchema) } } },
+          responses: { '200': { description: 'Estado actualizado.' } },
+        },
+      },
+      '/notifications/{id}/read': {
+        patch: {
+          tags: ['notifications'],
+          summary: 'Marcar una notificación como leída',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Notificación marcada.' } },
+        },
+      },
+      '/notifications/unsubscribe-link': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Generar el enlace de baja firmado',
+          responses: { '200': { description: 'Token de baja.' } },
+        },
+      },
+      '/notifications/outbox': {
+        get: {
+          tags: ['notifications'],
+          summary: 'Outbox propio (estado de envíos)',
+          responses: { '200': { description: 'Envíos encolados de la organización.' } },
+        },
+      },
+      '/admin/audit': {
+        get: {
+          tags: ['admin'],
+          summary: 'Auditoría: actor, acción, objeto y fecha',
+          responses: { '200': { description: 'Registros de auditoría.' } },
         },
       },
     },

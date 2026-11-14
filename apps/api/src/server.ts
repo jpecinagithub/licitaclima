@@ -4,6 +4,7 @@ import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { createDb, createPool, type Db } from '@licitaclima/db';
+import { emailProviderStatus, stripeStatus } from '@licitaclima/integrations';
 import { registerRoutes } from './routes/index.js';
 import { toErrorBody } from './lib/errors.js';
 
@@ -47,7 +48,14 @@ export function buildServer(opts: BuildServerOptions = {}) {
         dbStatus = 'error';
       }
     }
-    return { status: dbStatus === 'ok' || dbStatus === 'unconfigured' ? 'ok' : 'degraded', db: dbStatus, llm: 'none', stripe: 'pending', email: 'pending' };
+    // stripe/email 'pending' = PENDIENTE de configuración, no operativos.
+    return {
+      status: dbStatus === 'ok' || dbStatus === 'unconfigured' ? 'ok' : 'degraded',
+      db: dbStatus,
+      llm: 'none',
+      stripe: stripeStatus(),
+      email: emailProviderStatus(),
+    };
   });
   app.get('/api/v1/health', async () => ({ status: 'ok', version: '0.1.0' }));
   registerRoutes(app, db);
