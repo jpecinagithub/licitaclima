@@ -1,0 +1,633 @@
+{
+ "ventana": "2026-10-15 -> 2026-11-14 (31 días naturales, ambos incluidos)",
+ "filas_descargadas": 90049,
+ "filas_por_feed": {
+  "643": 64103,
+  "1044": 25946
+ },
+ "ids_distintos": 57658,
+ "expedientes_unicos": 57648,
+ "expedientes_por_feed": {
+  "643": 40888,
+  "1044": 16760
+ },
+ "solape_inter_feed": 0,
+ "nicho_unico": 913,
+ "nicho_por_estado_final": {
+  "PUB": 196,
+  "EV": 208,
+  "ADJ": 126,
+  "RES": 378,
+  "PRE": 4,
+  "ANUL": 1
+ },
+ "nicho_preclass": {
+  "núcleo": 719,
+  "marginal": 156,
+  "limítrofe": 38
+ },
+ "aperturas_nicho": 196,
+ "aperturas_nucleo": 147,
+ "aperturas_nucleo_amplio": 156,
+ "aperturas_marginales": 40,
+ "aperturas_por_feed": {
+  "643": 158,
+  "1044": 38
+ },
+ "importes_aperturas_nicho": {
+  "valor_estimado": {
+   "n": 195,
+   "mediana": "125845.59",
+   "min": "0.0",
+   "max": "44294455.44"
+  },
+  "ppto_base_sin_iva": {
+   "n": 196,
+   "mediana": "100000.0",
+   "min": "0.0",
+   "max": "44294455.44"
+  },
+  "ppto_base_con_iva": {
+   "n": 158,
+   "mediana": "91590.54",
+   "min": "0.0",
+   "max": "53596291.08"
+  }
+ },
+ "importes_aperturas_nucleo": {
+  "valor_estimado": {
+   "n": 146,
+   "mediana": "113171.1",
+   "min": "0.0",
+   "max": "14138800.0"
+  },
+  "ppto_base_sin_iva": {
+   "n": 147,
+   "mediana": "91147.94",
+   "min": "0.0",
+   "max": "13595000.0"
+  },
+  "ppto_base_con_iva": {
+   "n": 118,
+   "mediana": "91590.54",
+   "min": "0.0",
+   "max": "16449950.0"
+  }
+ },
+ "importes_aperturas_nucleo_amplio": {
+  "valor_estimado": {
+   "n": 155,
+   "mediana": "123431.25",
+   "min": "0.0",
+   "max": "42091753.18"
+  },
+  "ppto_base_sin_iva": {
+   "n": 156,
+   "mediana": "95540.0",
+   "min": "0.0",
+   "max": "35076460.98"
+  },
+  "ppto_base_con_iva": {
+   "n": 124,
+   "mediana": "94840.96",
+   "min": "0.0",
+   "max": "42442517.78"
+  }
+ },
+ "daily": {
+  "2026-10-15": {
+   "date": "2026-10-15",
+   "weekday": "Thu",
+   "aperturas_nicho": 5,
+   "aperturas_nucleo": 3,
+   "aperturas_nucleo_amplio": 3,
+   "aperturas_marginales": 2,
+   "entries_643": 2877,
+   "entries_1044": 1086
+  },
+  "2026-10-16": {
+   "date": "2026-10-16",
+   "weekday": "Fri",
+   "aperturas_nicho": 4,
+   "aperturas_nucleo": 4,
+   "aperturas_nucleo_amplio": 4,
+   "aperturas_marginales": 0,
+   "entries_643": 2963,
+   "entries_1044": 1080
+  },
+  "2026-10-17": {
+   "date": "2026-10-17",
+   "weekday": "Sat",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 80,
+   "entries_1044": 33
+  },
+  "2026-10-18": {
+   "date": "2026-10-18",
+   "weekday": "Sun",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 38,
+   "entries_1044": 22
+  },
+  "2026-10-19": {
+   "date": "2026-10-19",
+   "weekday": "Mon",
+   "aperturas_nicho": 4,
+   "aperturas_nucleo": 2,
+   "aperturas_nucleo_amplio": 2,
+   "aperturas_marginales": 2,
+   "entries_643": 2910,
+   "entries_1044": 1081
+  },
+  "2026-10-20": {
+   "date": "2026-10-20",
+   "weekday": "Tue",
+   "aperturas_nicho": 4,
+   "aperturas_nucleo": 2,
+   "aperturas_nucleo_amplio": 3,
+   "aperturas_marginales": 1,
+   "entries_643": 2749,
+   "entries_1044": 885
+  },
+  "2026-10-21": {
+   "date": "2026-10-21",
+   "weekday": "Wed",
+   "aperturas_nicho": 8,
+   "aperturas_nucleo": 4,
+   "aperturas_nucleo_amplio": 4,
+   "aperturas_marginales": 4,
+   "entries_643": 3095,
+   "entries_1044": 2062
+  },
+  "2026-10-22": {
+   "date": "2026-10-22",
+   "weekday": "Thu",
+   "aperturas_nicho": 3,
+   "aperturas_nucleo": 3,
+   "aperturas_nucleo_amplio": 3,
+   "aperturas_marginales": 0,
+   "entries_643": 2948,
+   "entries_1044": 1336
+  },
+  "2026-10-23": {
+   "date": "2026-10-23",
+   "weekday": "Fri",
+   "aperturas_nicho": 8,
+   "aperturas_nucleo": 7,
+   "aperturas_nucleo_amplio": 8,
+   "aperturas_marginales": 0,
+   "entries_643": 2887,
+   "entries_1044": 1730
+  },
+  "2026-10-24": {
+   "date": "2026-10-24",
+   "weekday": "Sat",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 55,
+   "entries_1044": 46
+  },
+  "2026-10-25": {
+   "date": "2026-10-25",
+   "weekday": "Sun",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 155,
+   "entries_1044": 28
+  },
+  "2026-10-26": {
+   "date": "2026-10-26",
+   "weekday": "Mon",
+   "aperturas_nicho": 13,
+   "aperturas_nucleo": 11,
+   "aperturas_nucleo_amplio": 11,
+   "aperturas_marginales": 2,
+   "entries_643": 3132,
+   "entries_1044": 1197
+  },
+  "2026-10-27": {
+   "date": "2026-10-27",
+   "weekday": "Tue",
+   "aperturas_nicho": 13,
+   "aperturas_nucleo": 12,
+   "aperturas_nucleo_amplio": 12,
+   "aperturas_marginales": 1,
+   "entries_643": 2959,
+   "entries_1044": 1173
+  },
+  "2026-10-28": {
+   "date": "2026-10-28",
+   "weekday": "Wed",
+   "aperturas_nicho": 4,
+   "aperturas_nucleo": 2,
+   "aperturas_nucleo_amplio": 2,
+   "aperturas_marginales": 2,
+   "entries_643": 3103,
+   "entries_1044": 1100
+  },
+  "2026-10-29": {
+   "date": "2026-10-29",
+   "weekday": "Thu",
+   "aperturas_nicho": 7,
+   "aperturas_nucleo": 4,
+   "aperturas_nucleo_amplio": 7,
+   "aperturas_marginales": 0,
+   "entries_643": 2869,
+   "entries_1044": 1079
+  },
+  "2026-10-30": {
+   "date": "2026-10-30",
+   "weekday": "Fri",
+   "aperturas_nicho": 7,
+   "aperturas_nucleo": 6,
+   "aperturas_nucleo_amplio": 7,
+   "aperturas_marginales": 0,
+   "entries_643": 3072,
+   "entries_1044": 1077
+  },
+  "2026-10-31": {
+   "date": "2026-10-31",
+   "weekday": "Sat",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 48,
+   "entries_1044": 48
+  },
+  "2026-11-01": {
+   "date": "2026-11-01",
+   "weekday": "Sun",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 181,
+   "entries_1044": 17
+  },
+  "2026-11-02": {
+   "date": "2026-11-02",
+   "weekday": "Mon",
+   "aperturas_nicho": 2,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 2,
+   "entries_643": 1078,
+   "entries_1044": 689
+  },
+  "2026-11-03": {
+   "date": "2026-11-03",
+   "weekday": "Tue",
+   "aperturas_nicho": 9,
+   "aperturas_nucleo": 6,
+   "aperturas_nucleo_amplio": 6,
+   "aperturas_marginales": 3,
+   "entries_643": 2931,
+   "entries_1044": 1206
+  },
+  "2026-11-04": {
+   "date": "2026-11-04",
+   "weekday": "Wed",
+   "aperturas_nicho": 9,
+   "aperturas_nucleo": 7,
+   "aperturas_nucleo_amplio": 7,
+   "aperturas_marginales": 2,
+   "entries_643": 3129,
+   "entries_1044": 1271
+  },
+  "2026-11-05": {
+   "date": "2026-11-05",
+   "weekday": "Thu",
+   "aperturas_nicho": 16,
+   "aperturas_nucleo": 12,
+   "aperturas_nucleo_amplio": 12,
+   "aperturas_marginales": 4,
+   "entries_643": 3080,
+   "entries_1044": 1092
+  },
+  "2026-11-06": {
+   "date": "2026-11-06",
+   "weekday": "Fri",
+   "aperturas_nicho": 9,
+   "aperturas_nucleo": 6,
+   "aperturas_nucleo_amplio": 6,
+   "aperturas_marginales": 3,
+   "entries_643": 3047,
+   "entries_1044": 1225
+  },
+  "2026-11-07": {
+   "date": "2026-11-07",
+   "weekday": "Sat",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 52,
+   "entries_1044": 42
+  },
+  "2026-11-08": {
+   "date": "2026-11-08",
+   "weekday": "Sun",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 194,
+   "entries_1044": 19
+  },
+  "2026-11-09": {
+   "date": "2026-11-09",
+   "weekday": "Mon",
+   "aperturas_nicho": 8,
+   "aperturas_nucleo": 6,
+   "aperturas_nucleo_amplio": 7,
+   "aperturas_marginales": 1,
+   "entries_643": 2426,
+   "entries_1044": 1061
+  },
+  "2026-11-10": {
+   "date": "2026-11-10",
+   "weekday": "Tue",
+   "aperturas_nicho": 11,
+   "aperturas_nucleo": 11,
+   "aperturas_nucleo_amplio": 11,
+   "aperturas_marginales": 0,
+   "entries_643": 3119,
+   "entries_1044": 1176
+  },
+  "2026-11-11": {
+   "date": "2026-11-11",
+   "weekday": "Wed",
+   "aperturas_nicho": 20,
+   "aperturas_nucleo": 14,
+   "aperturas_nucleo_amplio": 16,
+   "aperturas_marginales": 4,
+   "entries_643": 3096,
+   "entries_1044": 971
+  },
+  "2026-11-12": {
+   "date": "2026-11-12",
+   "weekday": "Thu",
+   "aperturas_nicho": 19,
+   "aperturas_nucleo": 15,
+   "aperturas_nucleo_amplio": 15,
+   "aperturas_marginales": 4,
+   "entries_643": 2976,
+   "entries_1044": 1204
+  },
+  "2026-11-13": {
+   "date": "2026-11-13",
+   "weekday": "Fri",
+   "aperturas_nicho": 13,
+   "aperturas_nucleo": 10,
+   "aperturas_nucleo_amplio": 10,
+   "aperturas_marginales": 3,
+   "entries_643": 2854,
+   "entries_1044": 889
+  },
+  "2026-11-14": {
+   "date": "2026-11-14",
+   "weekday": "Sat",
+   "aperturas_nicho": 0,
+   "aperturas_nucleo": 0,
+   "aperturas_nucleo_amplio": 0,
+   "aperturas_marginales": 0,
+   "entries_643": 0,
+   "entries_1044": 21
+  }
+ },
+ "revision_manual": {
+  "overrides_aplicados": 24,
+  "cambios_de_clase": 24,
+  "aperturas_nicho": 196,
+  "aperturas_nucleo_final": 147,
+  "aperturas_nucleo_amplio_final": 156,
+  "aperturas_marginales_final": 40,
+  "nucleo_solo_cpv": 30,
+  "sospecha_sede_vs_ejecucion": 12,
+  "top3_provincias_nucleo_mes": 38,
+  "top3_provincias_amplio_mes": 39,
+  "mediana_provincial_nucleo_mes": 2,
+  "mediana_provincial_amplio_mes": 2,
+  "distribucion_provincias_nucleo": {
+   "Cádiz": 2,
+   "Santa Cruz de Tenerife": 4,
+   "Illes Balears": 2,
+   "Girona": 3,
+   "(sin provincia)": 13,
+   "Asturias": 3,
+   "Burgos": 3,
+   "Lleida": 2,
+   "Madrid": 20,
+   "Málaga": 4,
+   "Alicante": 10,
+   "Badajoz": 3,
+   "Castellón": 3,
+   "Valladolid": 7,
+   "Ciudad Real": 4,
+   "Zaragoza": 4,
+   "Sevilla": 7,
+   "Murcia": 5,
+   "Granada": 4,
+   "Tarragona": 1,
+   "Valencia": 4,
+   "Pontevedra": 3,
+   "Toledo": 2,
+   "Salamanca": 1,
+   "Barcelona": 8,
+   "Palencia": 2,
+   "A Coruña": 4,
+   "Almería": 3,
+   "Teruel": 1,
+   "Córdoba": 2,
+   "Huelva": 1,
+   "Las Palmas": 1,
+   "Huesca": 1,
+   "La Rioja": 1,
+   "Cáceres": 1,
+   "Navarra": 2,
+   "Bizkaia": 2,
+   "Álava": 1,
+   "Guadalajara": 1,
+   "Gipuzkoa": 1,
+   "León": 1
+  },
+  "distribucion_provincias_amplio": {
+   "Cádiz": 2,
+   "Santa Cruz de Tenerife": 4,
+   "Illes Balears": 2,
+   "Girona": 3,
+   "(sin provincia)": 14,
+   "Asturias": 3,
+   "Burgos": 3,
+   "Lleida": 2,
+   "Madrid": 21,
+   "Málaga": 5,
+   "Soria": 1,
+   "Alicante": 10,
+   "Badajoz": 4,
+   "Castellón": 3,
+   "Valladolid": 8,
+   "Ciudad Real": 4,
+   "Zaragoza": 4,
+   "Sevilla": 7,
+   "Murcia": 5,
+   "Granada": 5,
+   "Tarragona": 1,
+   "Pontevedra": 4,
+   "Valencia": 4,
+   "Toledo": 2,
+   "Salamanca": 1,
+   "Barcelona": 8,
+   "Palencia": 2,
+   "A Coruña": 4,
+   "Almería": 3,
+   "Teruel": 1,
+   "Lugo": 1,
+   "Córdoba": 2,
+   "Huelva": 1,
+   "Las Palmas": 1,
+   "Huesca": 1,
+   "La Rioja": 1,
+   "Cáceres": 1,
+   "Navarra": 2,
+   "Bizkaia": 2,
+   "Álava": 1,
+   "Guadalajara": 1,
+   "Gipuzkoa": 1,
+   "León": 1
+  },
+  "importes_nucleo_final": {
+   "amt_est": {
+    "n": 146,
+    "p10": "16363.64",
+    "p25": "47052.24",
+    "mediana": "113171.1",
+    "p75": "266679.3",
+    "p90": "803057.52",
+    "min": "0",
+    "max": "14138800"
+   },
+   "amt_taxexcl": {
+    "n": 147,
+    "p10": "12316.64",
+    "p25": "40000",
+    "mediana": "91147.94",
+    "p75": "215492.17",
+    "p90": "538819.84",
+    "min": "0",
+    "max": "13595000"
+   },
+   "amt_total": {
+    "n": 118,
+    "p10": "9680",
+    "p25": "47628.97",
+    "mediana": "91590.54",
+    "p75": "251680",
+    "p90": "586463.17",
+    "min": "0",
+    "max": "16449950"
+   }
+  },
+  "importes_amplio_final": {
+   "amt_est": {
+    "n": 155,
+    "p10": "20000",
+    "p25": "47052.24",
+    "mediana": "123431.25",
+    "p75": "281704.98",
+    "p90": "831600",
+    "min": "0",
+    "max": "42091753.18"
+   },
+   "amt_taxexcl": {
+    "n": 156,
+    "p10": "15460",
+    "p25": "40000",
+    "mediana": "95540",
+    "p75": "217769.76",
+    "p90": "617429.2",
+    "min": "0",
+    "max": "35076460.98"
+   },
+   "amt_total": {
+    "n": 124,
+    "p10": "10708.5",
+    "p25": "43560",
+    "mediana": "94840.96",
+    "p75": "254100",
+    "p90": "757777.39",
+    "min": "0",
+    "max": "42442517.78"
+   }
+  },
+  "importes_nicho_final": {
+   "amt_est": {
+    "n": 195,
+    "p10": "21780",
+    "p25": "48000",
+    "mediana": "125845.59",
+    "p75": "349882.88",
+    "p90": "1393008.22",
+    "min": "0",
+    "max": "44294455.44"
+   },
+   "amt_taxexcl": {
+    "n": 196,
+    "p10": "16363.64",
+    "p25": "40929.14",
+    "mediana": "100000",
+    "p75": "277200",
+    "p90": "817906.05",
+    "min": "0",
+    "max": "44294455.44"
+   },
+   "amt_total": {
+    "n": 158,
+    "p10": "14903.14",
+    "p25": "43560",
+    "mediana": "91590.54",
+    "p75": "294492.38",
+    "p90": "1000000",
+    "min": "0",
+    "max": "53596291.08"
+   }
+  },
+  "media_dia_natural_31d": {
+   "nicho": 6.32,
+   "nucleo": 4.74,
+   "amplio": 5.03
+  },
+  "media_dia_laborable_22d": {
+   "nicho": 8.91,
+   "nucleo": 6.68,
+   "amplio": 7.09
+  },
+  "dias_laborables": 22,
+  "dias_fin_semana": 9,
+  "sin_provincia_nucleo": 13,
+  "sin_provincia_amplio": 14,
+  "sin_provincia_nicho": 17
+ },
+ "ventana_estricta_30d_15oct_13nov": {
+  "nicho": 196,
+  "nucleo": 147,
+  "amplio": 156
+ },
+ "aperturas_pre_revision": {
+  "nucleo": 157,
+  "nucleo_amplio": 162,
+  "marginales": 34
+ },
+ "nota_revision": "Top-level, daily e importes actualizados 2026-11-14 tras la revisión manual (24 correcciones): coinciden con daily_counts.csv, revision_manual y volume-30d.md. Medianas = mediana inferior (median_low), misma convención que el informe. Los valores pre-revisión quedan en aperturas_pre_revision."
+}

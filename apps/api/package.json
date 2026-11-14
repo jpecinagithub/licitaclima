@@ -1,0 +1,4 @@
+{ "name": "@licitaclima/api", "version": "0.1.0", "private": true, "type": "module",
+  "scripts": { "dev": "tsx watch src/server.ts", "build": "tsc -p tsconfig.app.json", "start": "node dist/server.js", "typecheck": "tsc -p tsconfig.app.json --noEmit", "lint": "echo ok", "test": "vitest run" },
+  "dependencies": { "@licitaclima/config": "workspace:*", "@licitaclima/db": "workspace:*", "@licitaclima/domain": "workspace:*", "@licitaclima/integrations": "workspace:*", "fastify": "^5.2.0", "@fastify/cookie": "^11.0.0", "@fastify/cors": "^10.0.0", "zod": "^3.23.0", "argon2": "^0.41.0", "otplib": "^12.0.1", "stripe": "^17.0.0" },
+  "devDependencies": { "tsx": "^4.19.0", "typescript": "^5.9.0", "vitest": "^3.0.0" } }

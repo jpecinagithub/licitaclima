@@ -1,0 +1,5 @@
+# LicitaClima — Caddy para HTTPS y reverse proxy (producción Oracle, pendiente de despliegue).
+licitaclima.es {
+  reverse_proxy /api/* localhost:3001
+  reverse_proxy /* localhost:80
+}

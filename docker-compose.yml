@@ -1,0 +1,46 @@
+# LicitaClima — producción en Oracle (NO desplegado aún; SSH bloqueado 2026-11-14).
+# Desarrollo local: `docker compose up db` (o PostgreSQL instalado en el host).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: licitaclima
+      POSTGRES_PASSWORD: licitaclima
+      POSTGRES_DB: licitaclima
+    ports:
+      - "5432:5432"
+    volumes:
+      - licitaclima_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U licitaclima -d licitaclima"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    env_file: .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+volumes:
+  licitaclima_pgdata:

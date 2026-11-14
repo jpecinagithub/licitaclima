@@ -1,0 +1,20 @@
+{
+  "name": "licitaclima",
+  "private": true,
+  "version": "0.1.0",
+  "description": "LicitaClima — licitaciones españolas de climatización para pymes. Resumen semanal + alertas.",
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @licitaclima/api dev",
+    "dev:web": "pnpm --filter @licitaclima/web dev",
+    "dev:worker": "pnpm --filter @licitaclima/worker dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @licitaclima/db generate",
+    "db:migrate": "pnpm --filter @licitaclima/db migrate",
+    "db:seed": "pnpm --filter @licitaclima/db seed"
+  },
+  "engines": { "node": ">=22" }
+}
