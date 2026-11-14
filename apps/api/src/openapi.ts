@@ -3,11 +3,14 @@ import {
   adminLoginSchema,
   adminReauthSchema,
   adminSettingsSchema,
+  analysisQuestionSchema,
   companyProfileSchema,
   consentSchema,
   consumeLinkSchema,
   emailWebhookSchema,
+  leadSchema,
   notificationPreferencesSchema,
+  personalStatusBodySchema,
   requestLinkSchema,
   supportMessageSchema,
   supportTicketSchema,
@@ -48,8 +51,9 @@ export function buildOpenApiDocument() {
       title: 'LicitaClima API',
       version: '0.1.0',
       description:
-        'API de LicitaClima (Fases B+D): autenticación por magic link, sesiones, perfil de empresa, ' +
-        'facturación Stripe (solo test), cuotas, soporte, notificaciones y panel admin. ' +
+        'API de LicitaClima (Fases B+D + API de lectura): autenticación por magic link, sesiones, perfil de empresa, ' +
+        'facturación Stripe (solo test), cuotas, soporte, notificaciones, panel admin, oportunidades, análisis ' +
+        'personalizados con evidencias, chat determinista sin LLM, favoritos, leads y endpoints públicos. ' +
         'Dinero en EUR (numeric), instantes en UTC, español de España. ' +
         'Stripe y correo sin configurar quedan PENDIENTE (checkout 503, outbox sin envío).',
     },
@@ -62,6 +66,11 @@ export function buildOpenApiDocument() {
       { name: 'support', description: 'Tickets de soporte vinculados a la organización' },
       { name: 'notifications', description: 'Notificaciones, preferencias, consentimientos y baja' },
       { name: 'admin', description: 'Panel de administración (resumen, finanzas, clientes, auditoría)' },
+      { name: 'opportunities', description: 'Oportunidades públicas (núcleo + limítrofe) y análisis personalizados' },
+      { name: 'analyses', description: 'Análisis personalizados, PDF y chat determinista con citas' },
+      { name: 'favorites', description: 'Favoritos y estado personal por organización' },
+      { name: 'leads', description: 'Captación pública (muestra)' },
+      { name: 'public', description: 'Cobertura y muestra pública, sin registro' },
     ],
     paths: {
       '/auth/request-link': {
@@ -485,6 +494,158 @@ export function buildOpenApiDocument() {
           tags: ['admin'],
           summary: 'Auditoría: actor, acción, objeto y fecha',
           responses: { '200': { description: 'Registros de auditoría.' } },
+        },
+      },
+      '/company-profile/versions': {
+        get: {
+          tags: ['profile'],
+          summary: 'Historial de versiones del perfil de empresa',
+          responses: { '200': { description: 'Versiones, de la más reciente a la más antigua.' } },
+        },
+      },
+      '/opportunities': {
+        get: {
+          tags: ['opportunities'],
+          summary: 'Lista filtrable de oportunidades (solo núcleo + limítrofe)',
+          description:
+            'Por defecto solo convocatorias abiertas (estado PUB). Los marginales no se listan. Filtros: provincia, estado, clase, texto, estadoPersonal, favorito. Paginación: page, limit (máx. 100). Orden: publicacion_desc (defecto), plazo_asc, importe_desc, importe_asc.',
+          parameters: [
+            { name: 'provincia', in: 'query', schema: { type: 'string' } },
+            { name: 'estado', in: 'query', schema: { type: 'string', default: 'PUB' } },
+            { name: 'clase', in: 'query', schema: { type: 'string', enum: ['nucleo', 'limitrofe'] } },
+            { name: 'texto', in: 'query', schema: { type: 'string' } },
+            { name: 'estadoPersonal', in: 'query', schema: { type: 'string', enum: ['pendiente', 'estudiar', 'descartada', 'presentada'] } },
+            { name: 'favorito', in: 'query', schema: { type: 'string', enum: ['true', 'false'] } },
+            { name: 'orden', in: 'query', schema: { type: 'string', enum: ['publicacion_desc', 'plazo_asc', 'importe_desc', 'importe_asc'] } },
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
+          ],
+          responses: {
+            '200': { description: 'Oportunidades + total.' },
+            '400': { description: 'Filtro no válido.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/opportunities/{id}': {
+        get: {
+          tags: ['opportunities'],
+          summary: 'Ficha de oportunidad con fuentes, lotes, documentos y requisitos',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '200': { description: 'Ficha completa.' },
+            '404': { description: 'No encontrada (o marginal, que no se lista).', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/opportunities/{id}/analyses': {
+        post: {
+          tags: ['opportunities'],
+          summary: 'Solicitar análisis personalizado (reserva cuota, 202 + job_id)',
+          description:
+            'Reserva 1 unidad de análisis de forma atómica. Revisitar un análisis terminado o una rectificación del mismo expediente NO consume. El trabajo lo ejecuta el worker (job personalized-analyze).',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '202': { description: 'Análisis encolado (pending) o ya en curso.' },
+            '200': { description: 'Análisis ya terminado: se reutiliza sin consumir.' },
+            '404': { description: 'Oportunidad no encontrada.', content: { 'application/json': { schema: errorBody } } },
+            '409': { description: 'Cuota agotada, sin acceso o nuevos análisis en pausa.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/opportunities/{id}/status': {
+        patch: {
+          tags: ['opportunities'],
+          summary: 'Estado personal (pendiente/estudiar/descartada/presentada)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: { required: true, content: { 'application/json': { schema: json(personalStatusBodySchema) } } },
+          responses: { '200': { description: 'Estado guardado.' } },
+        },
+      },
+      '/analyses/{id}': {
+        get: {
+          tags: ['analyses'],
+          summary: 'Análisis completo con evidencias',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '200': { description: 'Estado + resultado con evidencias cuando está listo.' },
+            '404': { description: 'No encontrado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/analyses/{id}/pdf': {
+        get: {
+          tags: ['analyses'],
+          summary: 'Exportación PDF del análisis (extracción determinista v1, sin LLM)',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '200': { description: 'PDF del análisis.' },
+            '404': { description: 'No encontrado.', content: { 'application/json': { schema: errorBody } } },
+            '409': { description: 'El análisis aún no está terminado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/analyses/{id}/questions': {
+        get: {
+          tags: ['analyses'],
+          summary: 'Historial de preguntas del análisis',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Mensajes de la conversación del expediente.' } },
+        },
+        post: {
+          tags: ['analyses'],
+          summary: 'Pregunta de chat contextual (determinista, con citas; consume cuota)',
+          description:
+            'SIN LLM: la respuesta se busca en los fragmentos extraídos del expediente. Con citas (documento, página, fragmento) o «Sin evidencia en los documentos». Consume 1 consulta de chat por pregunta.',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: { required: true, content: { 'application/json': { schema: json(analysisQuestionSchema) } } },
+          responses: {
+            '201': { description: 'Respuesta con citas o sin evidencia.' },
+            '409': { description: 'Cuota de chat agotada o análisis no terminado.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/favorites/{id}': {
+        post: {
+          tags: ['favorites'],
+          summary: 'Marcar favorito',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Favorito guardado.' } },
+        },
+        delete: {
+          tags: ['favorites'],
+          summary: 'Quitar favorito',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '204': { description: 'Favorito eliminado.' } },
+        },
+      },
+      '/leads': {
+        post: {
+          tags: ['leads'],
+          summary: 'Guardar lead de la muestra (público, rate limit)',
+          description:
+            'Crea o actualiza el lead y registra el consentimiento de marketing solo si se marca. Sin envío de correo (outbox pendiente).',
+          requestBody: { required: true, content: { 'application/json': { schema: json(leadSchema) } } },
+          responses: {
+            '200': { description: 'Lead guardado.' },
+            '429': { description: 'Demasiadas solicitudes.', content: { 'application/json': { schema: errorBody } } },
+          },
+        },
+      },
+      '/public/coverage': {
+        get: {
+          tags: ['public'],
+          summary: 'Cobertura pública: fuentes y última sincronización real',
+          description: 'Fuentes oficiales 643 y 1044 + última sincronización exitosa real (ingestion_runs) y conteos reales. Sin afirmar cobertura exhaustiva.',
+          responses: { '200': { description: 'Fuentes, conteos y última sincronización.' } },
+        },
+      },
+      '/public/sample': {
+        get: {
+          tags: ['public'],
+          summary: 'Muestra pública de oportunidades reales (sin registro)',
+          description: 'Oportunidades PUB de núcleo reales, limitadas (limit, máx. 10). Nunca se fabrican oportunidades.',
+          parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer', default: 5 } }],
+          responses: { '200': { description: 'Muestra real.' } },
         },
       },
     },
