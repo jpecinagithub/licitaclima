@@ -1,6 +1,8 @@
 // Adaptadores externos. NINGUNO operativo sin credenciales/configuración.
 // LLM: proveedor SIN elegir (PENDIENTE: Jon elige xAI o Top Tools AI).
 // La extracción determinista v1 (Fase C) NO es análisis LLM y nunca se presenta como tal.
+// Stripe: SOLO test, PENDIENTE de claves (Fase D).
+// Correo: SIN proveedor configurado (EMAIL_PROVIDER=none, Fase D).
 export interface LlmProvider {
   readonly name: string;
   readonly configured: boolean;
@@ -19,3 +21,6 @@ export function createLlmProvider(): LlmProvider {
   // Los proveedores reales (xAI / Top Tools AI) se añaden cuando Jon elija y aporte clave.
   return new NoLlmProvider();
 }
+
+export * from './stripe.js';
+export * from './email.js';
