@@ -11,6 +11,9 @@ const DATABASE_URL = process.env.DATABASE_URL ?? '';
 describe('PostgresWorkerStore', () => {
   let store: PostgresWorkerStore | null = null;
   let admin: Pool | null = null;
+  // Jobs ajenos reclamados por el test de claim: se devuelven a pending en
+  // afterAll para no dejar colgado trabajo real de la BD compartida.
+  let claimedJobIds: string[] = [];
 
   beforeAll(async () => {
     if (!DATABASE_URL) return;
@@ -20,6 +23,8 @@ describe('PostgresWorkerStore', () => {
     await admin.query("DELETE FROM tenders WHERE expediente LIKE 'TEST-%'");
     await admin.query("DELETE FROM organizations WHERE slug LIKE 'org-pg-test%'");
     await admin.query("DELETE FROM users WHERE email LIKE 'pg-test-%'");
+    // Jobs de prueba de ejecuciones anteriores (payload tenderId 'x').
+    await admin.query("DELETE FROM jobs WHERE payload ->> 'tenderId' = 'x'");
   });
 
   afterAll(async () => {
@@ -27,6 +32,10 @@ describe('PostgresWorkerStore', () => {
     await admin.query("DELETE FROM tenders WHERE expediente LIKE 'TEST-%'");
     await admin.query("DELETE FROM organizations WHERE slug LIKE 'org-pg-test%'");
     await admin.query("DELETE FROM users WHERE email LIKE 'pg-test-%'");
+    await admin.query("DELETE FROM jobs WHERE payload ->> 'tenderId' = 'x'");
+    if (claimedJobIds.length > 0) {
+      await admin.query("UPDATE jobs SET status='pending' WHERE id = ANY($1::uuid[]) AND status='running'", [claimedJobIds]);
+    }
     await admin.end();
     await store.close();
   });
@@ -85,9 +94,15 @@ describe('PostgresWorkerStore', () => {
   it('jobs: encolar, reclamar (una sola vez) y completar; outbox idempotente', async () => {
     if (!store) return;
     const job = await store.enqueueJob('documents', { tenderId: 'x' });
-    const claimed = await store.claimDueJobs(10);
+    // Reclamar por tandas hasta encontrar el job propio: en la BD compartida
+    // puede haber otros jobs pendientes (de la ingesta real) más antiguos.
+    let claimed: Awaited<ReturnType<typeof store.claimDueJobs>> = [];
+    for (let i = 0; i < 5 && !claimed.some((j) => j.id === job.id); i++) {
+      claimed = [...claimed, ...(await store.claimDueJobs(100))];
+    }
     expect(claimed.some((j) => j.id === job.id)).toBe(true);
-    const claimedAgain = await store.claimDueJobs(10);
+    claimedJobIds = claimed.map((j) => j.id);
+    const claimedAgain = await store.claimDueJobs(100);
     expect(claimedAgain.some((j) => j.id === job.id)).toBe(false); // ya reclamado
     await store.completeJob(job.id);
 
