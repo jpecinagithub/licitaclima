@@ -366,4 +366,20 @@ describe('favoritos y estado personal', () => {
       .where(eq(favorites.organizationId, a.organizationId));
     expect(favAfter.length).toBe(0);
   });
+
+  it('DELETE /favorites con Content-Type json y sin cuerpo → 400, no 500', async () => {
+    const a = loginA;
+    // El cliente web enviaba Content-Type: application/json en todas las
+    // peticiones, también en DELETE sin cuerpo: antes devolvía 500
+    // (FST_ERR_CTP_EMPTY_JSON_BODY). Ahora es 400 validation_error y el
+    // cliente web ya no envía ese header sin cuerpo (apps/web/src/lib/api.ts);
+    // el DELETE sin ese header sigue devolviendo 204 (test anterior).
+    const del = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/favorites/${nucleoMadrid}`,
+      headers: { cookie: a.cookie, 'content-type': 'application/json' },
+    });
+    expect(del.statusCode).toBe(400);
+    expect(del.json().error.code).toBe('validation_error');
+  });
 });

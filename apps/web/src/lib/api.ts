@@ -94,9 +94,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // Sin cuerpo no se envía Content-Type: application/json: Fastify
+  // rechaza una petición sin cuerpo que declara JSON (cuerpo vacío) y el
+  // DELETE de favoritos devolvía 500 por eso.
+  const hasBody = init?.body !== undefined && init?.body !== null;
   const res = await fetch(`${BASE}/api/v1${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+    headers: { ...(hasBody ? { 'Content-Type': 'application/json' } : {}), ...(init?.headers ?? {}) },
     ...init,
   });
   if (res.status === 204) return undefined as T;

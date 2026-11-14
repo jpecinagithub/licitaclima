@@ -44,6 +44,18 @@ describe('answerDeterministically (sin LLM)', () => {
     expect(r.texto).toBe(SIN_EVIDENCIA_TEXTO);
   });
 
+  it('un término genérico aislado no basta: exige 2 términos distintos', () => {
+    // El pliego real menciona «empresa» en casi todas las páginas; que una
+    // página case solo ese término no significa que responda a la pregunta.
+    const paginas = [
+      { documento: 'pliego.pdf', pagina: 1, texto: 'La empresa adjudicataria deberá cumplir las obligaciones del contrato.' },
+    ];
+    const r = answerDeterministically('¿Cuál es la política de dividendos de la empresa?', paginas);
+    expect(r.sinEvidencia).toBe(true);
+    expect(r.citas).toEqual([]);
+    expect(r.texto).toBe(SIN_EVIDENCIA_TEXTO);
+  });
+
   it('sin páginas extraídas no inventa respuesta', () => {
     const r = answerDeterministically('¿Qué garantía se exige?', []);
     expect(r.sinEvidencia).toBe(true);

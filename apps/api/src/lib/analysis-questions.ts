@@ -85,6 +85,9 @@ function fragmentoAlrededor(texto: string, terminos: string[], maxLen = 400): st
  * Responde buscando términos de la pregunta en las páginas extraídas.
  * Ordena las páginas por número de términos distintos encontrados y cita
  * hasta 3. Sin coincidencias: «Sin evidencia en los documentos».
+ * Una página solo cuenta si casa al menos 2 términos distintos cuando la
+ * pregunta tiene 2 o más: un término genérico aislado («empresa») no basta
+ * para afirmar que el pliego responde a la pregunta.
  */
 export function answerDeterministically(pregunta: string, paginas: PageFragment[]): DeterministicAnswer {
   const q = pregunta.trim();
@@ -100,13 +103,14 @@ export function answerDeterministically(pregunta: string, paginas: PageFragment[
   if (terminos.length === 0 || paginas.length === 0) {
     return { texto: SIN_EVIDENCIA_TEXTO, citas: [], sinEvidencia: true };
   }
+  const minimoAciertos = terminos.length >= 2 ? 2 : 1;
   const puntuadas = paginas
     .map((p) => {
       const norm = normalizar(p.texto);
       const encontrados = terminos.filter((t) => norm.includes(t));
       return { pagina: p, aciertos: encontrados.length, encontrados };
     })
-    .filter((r) => r.aciertos > 0)
+    .filter((r) => r.aciertos >= minimoAciertos)
     .sort((a, b) => b.aciertos - a.aciertos || (a.pagina.pagina ?? 0) - (b.pagina.pagina ?? 0))
     .slice(0, 3);
   if (puntuadas.length === 0) {
