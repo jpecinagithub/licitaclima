@@ -94,7 +94,9 @@ describe('extractPdfText (pdfjs-dist)', () => {
     expect(result.pages[0].page).toBe(1);
     const todo = result.pages.map((p) => p.text).join(' ');
     expect(todo.toLowerCase()).toContain('climatizaci');
-  });
+    // 52 páginas reales con pdfjs: ~1,5 s solo, pero >5 s con la suite en
+    // paralelo en VM de CPU compartida (timeout de vitest: 5 s por defecto).
+  }, 30_000);
 
   it('PDF en blanco sin texto → sinTexto=true (requiere_OCR)', async () => {
     const result = await extractPdfText(pdfBlanco());
