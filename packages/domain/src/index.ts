@@ -1,4 +1,5 @@
 // LicitaClima — tipos de dominio. Dinero siempre como string decimal (nunca float).
+export * from './extraction.js';
 export type Money = { amount: string; currency: 'EUR' };
 export type TenderStatus = 'PRE' | 'PUB' | 'EV' | 'ADJ' | 'RES' | 'ANUL';
 export type NicheClass = 'nucleo' | 'limitrofe' | 'marginal';

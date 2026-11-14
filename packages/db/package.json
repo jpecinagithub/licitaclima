@@ -1,5 +1,29 @@
-{ "name": "@licitaclima/db", "version": "0.1.0", "private": true, "type": "module",
-  "main": "./src/index.ts", "types": "./src/index.ts",
-  "scripts": { "build": "tsc -p tsconfig.json --noEmit", "typecheck": "tsc -p tsconfig.json --noEmit", "lint": "echo ok", "test": "vitest run", "generate": "drizzle-kit generate", "migrate": "tsx src/migrate.ts", "seed": "tsx src/seed.ts" },
-  "dependencies": { "drizzle-orm": "^0.44.0", "pg": "^8.13.0" },
-  "devDependencies": { "drizzle-kit": "^0.31.0", "tsx": "^4.19.0", "typescript": "^5.9.0", "vitest": "^3.0.0", "@types/pg": "^8.11.0" } }
+{
+  "name": "@licitaclima/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo ok",
+    "test": "vitest run",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.0",
+    "pg": "^8.13.0",
+    "@licitaclima/integrations": "workspace:*"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.0.0",
+    "@types/pg": "^8.11.0"
+  }
+}
