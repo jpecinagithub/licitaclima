@@ -16,6 +16,7 @@ se presenta como operativo.
 | `block/fase-b` | 957714d..6987ce7 | `dbf4df0` |
 | `block/fase-c` | 1992281..8622670 | `2ccc37f` |
 | `block/fase-d` | 435d0c1..113e352 | `324b714` |
+| `block/api-lectura` | ecd9e2b..edab059 | `49596b1` |
 
 Merges con `--no-ff`, sin reescribir historia. Conflictos resueltos:
 
@@ -43,7 +44,8 @@ a secas), `pnpm test` (hace `build` antes, como CI).
 | `pnpm build` | OK (web incl. prerender: 10 rutas + sitemap + robots) |
 | `pnpm typecheck` | OK (8 paquetes; el 9.º es la raíz, sin script propio) |
 
-Tests por paquete (Vitest, PostgreSQL 16.15 real donde aplica):
+Tests por paquete (Vitest, PostgreSQL 16.15 real donde aplica), tras el
+merge de `block/api-lectura` (2026-11-14, master `49596b1`):
 
 | Paquete | Tests |
 |---|---|
@@ -51,10 +53,17 @@ Tests por paquete (Vitest, PostgreSQL 16.15 real donde aplica):
 | `apps/web` | 15 passed (4 ficheros) |
 | `packages/db` | 13 passed (2 ficheros) |
 | `packages/integrations` | 36 passed (5 ficheros) |
-| `apps/worker` | 30 passed (6 ficheros) |
-| `apps/api` | 64 passed (13 ficheros) |
+| `apps/worker` | 32 passed (7 ficheros) |
+| `apps/api` | 103 passed (20 ficheros) |
 | `packages/config`, `packages/prompts` | 0 (sin tests por diseño; `--passWithNoTests`) |
-| **Total** | **184 passed, 0 failed** |
+| **Total** | **225 passed, 0 failed** |
+
+El merge añadió `dotenv` en `@licitaclima/db` y `pdfkit` en la API
+(lockfile ya actualizado en la rama, `ecd9e2b`); en un checkout de
+master con `node_modules` anterior al merge el typecheck de `db`
+fallaba (`Cannot find module 'dotenv'`) hasta correr `pnpm install`.
+Tras `pnpm install --frozen-lockfile`, typecheck en verde en los 8
+paquetes.
 
 Arreglos de Fase F incluidos (commit `f452f92`):
 
@@ -128,14 +137,34 @@ Servidores desde `dist`: API :3001 + web preview :4173.
 
 | Paso | Resultado |
 |---|---|
-| Muestra | `GET /` 200, `GET /muestra` 200 (prerender con contenido real; 49 €/mes visible). `POST /leads` → 404 (sin backend; ver §5). |
+| Muestra | `GET /` 200, `GET /muestra` 200 (prerender con contenido real; 49 €/mes visible). `POST /leads` → 200 (antes 404; ruta añadida en `block/api-lectura`, ver §5). |
 | Registro | `POST /auth/request-link` 200 genérica + 1 fila `login_tokens` + 1 fila `email_outbox` (`magic_link`, `pending`, sin envío). Token obtenido con el mismo código que lo genera (`requestMagicLink`, vía `node`, documentado: sin proveedor de correo no hay otro canal). `GET /auth/verify-link` dos veces → `valid: true` (el GET no consume). `POST /auth/consume-link` → 200, usuario + organización creados (rol `owner`), cookie de sesión. Tras el consumo → `valid: false`; reuso → 410 `invalid_link`. `GET /me` → 200. |
 | Perfil | `GET /company-profile` inicial → 404 `not_found`. `PATCH` (Madrid/Toledo/Guadalajara, RITE, etc.) → 200, versión 1. `GET` → perfil guardado. 1 fila en `profile_versions`. |
-| Análisis | Ver §3.3 (cadena completa con pliegos reales, publicado). |
-| Pregunta | `POST /api/v1/analyses/:id/questions` → **404** (ruta inexistente; ver §5). La capa determinista sí marca «sin evidencia» con `evidence = NULL` (ver §3.3); el chat sin LLM no existe como endpoint, así que no hay respuesta que verificar. |
+| Análisis | Ver §3.3 (cadena completa con pliegos reales, publicado). En la sesión de `block/api-lectura`: `POST /opportunities/:id/analyses` → 202 con `consumedQuota=true` y 9 análisis restantes; `run personalized-analyze` → `done`, recomendación «negativa» (correcta: perfil Madrid/Toledo/Guadalajara frente a licitación en Asturias). `GET /analyses/:id` → 200 (`estado=analizado`, `status=done`, 10 requisitos, 6 con evidencia). Revisita → 200 `consumedQuota=false` (`revisit_or_rectification`). `GET /analyses/:id/pdf` → 200, 24.681 bytes, `%PDF`. |
+| Pregunta | `POST /analyses/:id/questions` → 201 con citas (`sinEvidencia=false`, 3 citas) y 201 `sinEvidencia=true` («Sin evidencia en los documentos…») para «¿Cuál es la política de dividendos de la empresa?»; historial → 200 (8 mensajes). |
+| Favoritos | `POST /favorites/:id` → 200 (`favorito=true`); `PATCH /favorites/:id` → 200 (`estado=estudiar`); `DELETE /favorites/:id` → 204 y `favorito=false` en la ficha. |
+| Cross-org (paso 26) | Segundo usuario: `GET /analyses/:id` ajeno → 404; favoritos propios vacíos; sin perfil → 404; la licitación pública 9124/2026 sí es visible. Id malformado → 404 (no 500). El usuario A sí lee su propio análisis → 200. |
 | Cancelación | `GET /billing/subscription` → 200 (`free`, plan 49 €, 10 análisis / 100 chat). `POST /billing/cancel` → **503 `stripe_not_configured`** (sin claves Stripe; pendiente). `GET /usage` → 200 (10 análisis y 100 chat restantes). |
-| Digest | `digest --org <id E2E>` → `sin_novedades` (0 publicados en Madrid/Toledo/Guadalajara; correcto: no se envía correo vacío). 0 filas de digest en outbox. |
+| Digest | `digest --org <id E2E>` → en la sesión de Fase F dio `sin_novedades` porque ningún expediente estaba aún en `publicado` (el seed los deja en `descubierto`/`validado` y solo la cadena documents→extract→analyze→publish los publica). En la sesión de `block/api-lectura`, tras publicar 2167/2026 (Guadalajara) y 2754/2026 (Toledo), el digest de la semana 2026-11-09 para la org de Madrid/Toledo/Guadalajara dio `enviado` con 2 novedades y 1 fila en `email_outbox` (`resumen_semanal`, `pending`, sin envío). Matiz: ambas se publicaron con `sin_documentos` (sin pliegos descargables en el feed) y sin análisis genérico (0 requisitos); el digest las lista igualmente (ver §5, punto 10). |
 | Jobs Fase D | `run billing-reconcile` → `pending/stripe_not_configured`. `run billing-events` → 0 procesados. `run email-outbox` → `pending/email_not_configured`. `schedule` arranca, ejecuta los ticks (due 6/6, ingest encolado, reconcile pending) y calcula el próximo digest (lun 2026-11-16T08:00:00Z). |
+
+Defectos encontrados por este E2E y corregidos en la rama (`edab059`,
+antes del merge):
+
+1. `DELETE /favorites/:id` con `Content-Type: application/json` y sin
+   cuerpo devolvía **500** (`FST_ERR_CTP_EMPTY_JSON_BODY`): el cliente
+   web enviaba ese header en todas las peticiones. El cliente ya no
+   envía `Content-Type` sin cuerpo (`apps/web/src/lib/api.ts`) y el
+   error handler de la API mapea los errores `FST_ERR_CTP_*` a 400
+   `validation_error`, nunca 500. El parser propio de
+   `application/json` no era viable: `billing.ts` ya registra uno
+   (cuerpo crudo para la firma del webhook de Stripe) y Fastify no
+   admite dos para el mismo content-type.
+2. La pregunta «¿Cuál es la política de dividendos de la empresa?»
+   casaba páginas que solo contienen la palabra genérica «empresa»
+   (`sinEvidencia=false` con citas falsas). El comparador determinista
+   exige ahora **≥2 términos distintos** cuando la pregunta tiene 2 o
+   más (1 basta para preguntas de un solo término).
 
 ## 4. Probado con proveedor en test
 
@@ -146,16 +175,15 @@ proveedor (503/pending explícitos, sin simulación de éxito).
 
 ## 5. Pendiente (con causa)
 
-1. **Rutas API de oportunidades / análisis / chat / favoritos / leads /
-   públicas** (`GET /opportunities`, `POST /opportunities/:id/analyses`,
-   `GET /analyses/:id`, `POST /analyses/:id/questions`,
-   `GET /analyses/:id/pdf`, favoritos, `POST /leads`,
-   `GET /public/*`, `GET /company-profile/versions`,
-   `GET /admin/finances`, `GET /admin/communications`): la web las
-   llama y devuelven 404. Causa: la Fase C entregó worker + seed, no la
-   API de lectura; la Fase E no las incluyó. Sin ellas no hay flujo
-   completo muestra → análisis → pregunta desde la web. Es el hueco
-   principal de este MVP.
+1. **~~Rutas API de oportunidades / análisis / chat / favoritos / leads /
+   públicas~~ — RESUELTO 2026-11-14.** Merge `49596b1`
+   (`block/api-lectura`, `ecd9e2b..edab059`): `GET /opportunities`,
+   `POST /opportunities/:id/analyses`, `GET /analyses/:id`,
+   `POST /analyses/:id/questions`, `GET /analyses/:id/pdf`, favoritos,
+   `POST /leads`, `GET /public/*`, `GET /company-profile/versions`,
+   `GET /admin/finances`, `GET /admin/communications`. E2E completo en
+   §3.5 (26/26 pasos + digest con novedades + cross-org). Quedaba el
+   hueco principal del MVP; ya no lo es.
 2. **Stripe en test**: sin claves. Causa: pendiente de Jon. Bloquea
    checkout, portal, cancelación y webhooks reales.
 3. **Correo**: sin proveedor. Causa: pendiente de Jon (Gmail dedicada o
@@ -177,6 +205,13 @@ proveedor (503/pending explícitos, sin simulación de éxito).
 9. **Textos legales**: plantillas pendientes de completar y revisar.
 10. **Licencia de Hacienda**: aviso legal y spec v1.3 sin verificar
     desde esta VM.
+11. **Publicar sin extracción**: `run publish` marca `publicado` aunque
+    el expediente no tenga documentos ni análisis genérico (verificado
+    2026-11-14 con 2167/2026 y 2754/2026: `sin_documentos`, 0
+    requisitos) y el digest lo lista igualmente. Causa: el job de
+    Fase C no exige extracción previa. Decisión pendiente: si publicar
+    debe exigir análisis genérico o si la ficha sin requisitos es
+    aceptable como «publicado sin pliegos».
 
 ## 6. Datos de la verificación E2E (para reproducir)
 
@@ -192,3 +227,29 @@ proveedor (503/pending explícitos, sin simulación de éxito).
   (el seed) + actualizaciones de la ingesta en vivo; documents 8;
   jobs 50 (incluye los encolados por las pruebas del programador);
   `generic_analyses` 4 (Badajoz, 04/2026, 5734/2026, 9124/2026).
+
+Sesión de verificación de `block/api-lectura` (2026-11-14, rama
+`edab059`, servidor :3001 desde `dist`, PostgreSQL 16 real):
+
+- Usuarios E2E: `e2e-lectura@licitaclima.test` (org A
+  `640f9b2b-41ca-410c-834d-9de4ada15132`), `e2e-cross@licitaclima.test`
+  (org B), `e2e-flujo@licitaclima.test` (org C
+  `79fbd133-f919-433c-b692-59b9912dc9ce`, perfil Madrid/Toledo/
+  Guadalajara v1). Suscripción de prueba en org C (plan
+  `licitaclima-mensual-v1`, `cus_test_e2e`/`sub_test_e2e`, periodo
+  2026-11-13 → 2026-12-13): sin ella el plan gratuito muestra la cuota
+  (10 análisis / 100 chat) pero `POST /opportunities/:id/analyses`
+  devuelve 409 `quota_exceeded` («Se requiere una suscripción activa
+  para usar esta cuota»).
+- Análisis: A `e96c1d22-bc50-497b-9a80-09b49bfb2b33` sobre 9124/2026;
+  C `1f159b99-1615-45b1-ba4e-cbaa7b6d616d` (job
+  `72e95ac6-716e-4326-9050-cfab7ca388f9`, recomendación «negativa»).
+- Expedientes publicados por la cadena en esta sesión: 2167/2026
+  (Guadalajara) y 2754/2026 (Toledo), ambos `sin_documentos` y sin
+  análisis genérico; digest semanal 2026-11-09 de org C: `enviado`
+  con esas 2 novedades (1 fila `resumen_semanal` en outbox).
+- La BD de desarrollo se limpió al cerrar el bloque (ver §3.5): se
+  resembró desde cero y quedaron solo los 913 expedientes del seed;
+  los usuarios/orgs/suscripciones/análisis/favoritos/jobs/outbox del
+  E2E se eliminaron. `data/seed/seed-manifest.json` se commiteó en
+  master tras la resiembra final.
