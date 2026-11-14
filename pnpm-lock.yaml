@@ -117,6 +117,9 @@ importers:
       '@licitaclima/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
+      drizzle-orm:
+        specifier: ^0.44.0
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
       pg:
         specifier: ^8.13.0
         version: 8.23.1
@@ -192,12 +195,24 @@ importers:
       '@licitaclima/config':
         specifier: workspace:*
         version: link:../config
+      '@licitaclima/db':
+        specifier: workspace:*
+        version: link:../db
+      '@licitaclima/domain':
+        specifier: workspace:*
+        version: link:../domain
+      drizzle-orm:
+        specifier: ^0.44.0
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.1)
       fast-xml-parser:
         specifier: ^5.3.0
         version: 5.12.1
       pdfjs-dist:
         specifier: ^5.4.0
         version: 5.7.284
+      stripe:
+        specifier: ^17.0.0
+        version: 17.7.0
       zod:
         specifier: ^3.23.0
         version: 3.25.76

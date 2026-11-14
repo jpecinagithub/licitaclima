@@ -39,6 +39,10 @@ export const emailOutbox = pgTable(
     payload: jsonb('payload'),
     /** Clave idempotente: un reintento no envía dos veces. */
     idempotencyKey: text('idempotency_key').notNull(),
+    /** 'account' (cuenta/pagos, siempre) | 'service' (avisos solicitados) |
+     *  'marketing' (solo con consentimiento). La baja de marketing no cancela
+     *  'account'; desactivar alertas no cancela la suscripción. */
+    category: text('category').notNull().default('account'),
     /** 'pending' | 'sent' | 'failed' | 'suppressed' */
     status: text('status').notNull().default('pending'),
     attempts: integer('attempts').notNull().default(0),
@@ -104,6 +108,43 @@ export const suppressionEntries = pgTable(
     ...createdOnly,
   },
   (t) => [uniqueIndex('suppression_entries_email_channel_uq').on(t.email, t.channel)],
+);
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: idColumn(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    /** 'tender_update' | 'rectification' | 'billing' | 'system' */
+    type: text('type').notNull(),
+    title: text('title').notNull(),
+    body: text('body'),
+    tenderId: uuid('tender_id'),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    ...createdOnly,
+  },
+  (t) => [
+    index('notifications_org_created_idx').on(t.organizationId, t.createdAt),
+    index('notifications_org_read_idx').on(t.organizationId, t.readAt),
+  ],
+);
+
+export const notificationPreferences = pgTable(
+  'notification_preferences',
+  {
+    id: idColumn(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    /** Avisos de servicio (rectificaciones, novedades en tus provincias). */
+    serviceAlerts: boolean('service_alerts').notNull().default(true),
+    /** Resumen semanal de actividad. */
+    weeklyDigest: boolean('weekly_digest').notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('notification_preferences_org_uq').on(t.organizationId)],
 );
 
 export const leads = pgTable(

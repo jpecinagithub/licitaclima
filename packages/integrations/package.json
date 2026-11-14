@@ -14,8 +14,12 @@
   "dependencies": {
     "zod": "^3.23.0",
     "@licitaclima/config": "workspace:*",
+    "@licitaclima/db": "workspace:*",
+    "@licitaclima/domain": "workspace:*",
+    "drizzle-orm": "^0.44.0",
     "fast-xml-parser": "^5.3.0",
-    "pdfjs-dist": "^5.4.0"
+    "pdfjs-dist": "^5.4.0",
+    "stripe": "^17.0.0"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
