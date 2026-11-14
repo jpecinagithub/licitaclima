@@ -36,6 +36,18 @@ export function sourceFeed(sourceKey: string): '643' | '1044' {
   return sourceKey.includes('1044') ? '1044' : '643';
 }
 
+/**
+ * Nombre visible de un documento. El worker (Fase C) guarda el tipo de
+ * pliego como `filename` ('pcap' | 'ppt'); se expande para que la cita sea
+ * legible sin cambiar la identidad del documento (id, página y fragmento
+ * siguen siendo los de la evidencia).
+ */
+export function documentDisplayName(filename: string | null, url: string): string {
+  if (filename === 'pcap') return 'Pliego de cláusulas administrativas (PCAP)';
+  if (filename === 'ppt') return 'Pliego de prescripciones técnicas (PPT)';
+  return filename ?? url;
+}
+
 function eur(value: string | null): number | null {
   if (value === null || value === undefined) return null;
   const n = Number(value);
@@ -187,6 +199,10 @@ export async function loadOpportunityContext(
 
 /** Carga un expediente visible o 404 genérico (marginal o inexistente). */
 export async function loadVisibleTender(db: Db, tenderId: string): Promise<TenderRow> {
+  // Un id que no es UUID no puede existir: 404, no 500 de Postgres.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenderId)) {
+    throw notFound('Oportunidad no encontrada.');
+  }
   const [row] = await db.select().from(tenders).where(eq(tenders.id, tenderId)).limit(1);
   if (!row || !isVisibleTender(row)) throw notFound('Oportunidad no encontrada.');
   return row;

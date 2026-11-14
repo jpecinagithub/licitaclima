@@ -35,6 +35,7 @@ import { releaseQuota, reserveQuota, shouldConsumeForAnalysis } from '../lib/quo
 import {
   TENDER_STATES,
   VISIBLE_CLASSES,
+  documentDisplayName,
   loadOpportunityContext,
   loadVisibleTender,
   toOpportunityJson,
@@ -158,7 +159,7 @@ export const opportunitiesRoutes: FastifyPluginAsync<RouteOptions> = async (app,
         .select()
         .from(requirementEvidence)
         .where(eq(requirementEvidence.genericAnalysisId, generic.id));
-      const docById = new Map(docRows.map((doc) => [doc.id, doc.filename ?? doc.url]));
+      const docById = new Map(docRows.map((doc) => [doc.id, documentDisplayName(doc.filename, doc.url)]));
       requisitos = evRows.map((r) => {
         const ev = (r.evidence ?? null) as { documentId?: string; page?: number; fragment?: string } | null;
         return {
@@ -191,7 +192,7 @@ export const opportunitiesRoutes: FastifyPluginAsync<RouteOptions> = async (app,
       })),
       documentos: docRows.map((doc) => ({
         id: doc.id,
-        filename: doc.filename,
+        filename: documentDisplayName(doc.filename, doc.url),
         mime: doc.mime,
         sizeBytes: doc.sizeBytes,
         url: doc.url,

@@ -2,7 +2,7 @@
 // favoritos y estado personal (PostgreSQL real, BD por fichero).
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { favorites, jobs, lots, personalizedAnalyses, usageLedger } from '@licitaclima/db';
+import { favorites, jobs, lots, personalizedAnalyses, usageLedger, documents } from '@licitaclima/db';
 import { buildServer } from '../server.js';
 import { createTestDb, type TestDb } from '../lib/test-db.js';
 import { loginAs, makeActiveSubscription } from './test-helpers.js';
@@ -161,6 +161,15 @@ describe('GET /opportunities', () => {
 describe('GET /opportunities/:id', () => {
   it('ficha con lotes, importes diferenciados y encaje nulo sin análisis', async () => {
     const cookie = loginA.cookie;
+    await t.db.insert(documents).values({
+      tenderId: nucleoMadrid,
+      url: 'https://example.es/pcap.pdf',
+      filename: 'pcap',
+      mime: 'application/pdf',
+      sizeBytes: 1000,
+      sha256: 'b'.repeat(64),
+      status: 'downloaded',
+    });
     const res = await app.inject({ method: 'GET', url: `/api/v1/opportunities/${nucleoMadrid}`, headers: { cookie } });
     expect(res.statusCode).toBe(200);
     const body = res.json() as {
@@ -171,6 +180,7 @@ describe('GET /opportunities/:id', () => {
       valorEstimadoEur: number;
       presupuestoBaseSinIvaEur: number;
       lotes: { numero: string }[];
+      documentos: { filename: string }[];
       encaje: unknown;
       favorito: boolean;
       estadoPersonal: unknown;
@@ -181,6 +191,8 @@ describe('GET /opportunities/:id', () => {
     expect(body.valorEstimadoEur).toBe(100000);
     expect(body.presupuestoBaseSinIvaEur).toBe(90000);
     expect(body.lotes.map((l) => l.numero).sort()).toEqual(['1', '2']);
+    // El worker guarda el tipo como filename ('pcap'): la API lo expande.
+    expect(body.documentos[0]?.filename).toBe('Pliego de cláusulas administrativas (PCAP)');
     expect(body.encaje).toBeNull();
     expect(body.favorito).toBe(false);
     expect(body.estadoPersonal).toBeNull();
@@ -200,6 +212,12 @@ describe('GET /opportunities/:id', () => {
       headers: { cookie },
     });
     expect(resUnknown.statusCode).toBe(404);
+    const resMalformed = await app.inject({
+      method: 'GET',
+      url: '/api/v1/opportunities/no-es-un-uuid',
+      headers: { cookie },
+    });
+    expect(resMalformed.statusCode).toBe(404);
     void nucleoAdj;
     void nucleoBarcelona;
     void limitrofeToledo;

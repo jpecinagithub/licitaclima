@@ -137,6 +137,12 @@ describe('GET /analyses/:id', () => {
       headers: { cookie },
     });
     expect(resUnknown.statusCode).toBe(404);
+    const resMalformed = await app.inject({
+      method: 'GET',
+      url: '/api/v1/analyses/no-es-un-uuid',
+      headers: { cookie },
+    });
+    expect(resMalformed.statusCode).toBe(404);
   });
 
   it('análisis pendiente: 200 con estado y sin requisitos inventados', async () => {

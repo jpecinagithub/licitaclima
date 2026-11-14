@@ -34,12 +34,16 @@ import { analysisQuestionSchema } from '../lib/schemas.js';
 import { reserveQuota } from '../lib/quotas.js';
 import { answerDeterministically } from '../lib/analysis-questions.js';
 import { buildAnalysisPdf, type PdfRequisito } from '../lib/pdf-export.js';
-import { plazoFecha, plazoHora } from '../lib/opportunities.js';
+import { documentDisplayName, plazoFecha, plazoHora } from '../lib/opportunities.js';
 
 type AnalysisRow = typeof personalizedAnalyses.$inferSelect;
 type TenderRow = typeof tenders.$inferSelect;
 
 async function loadAnalysisForOrg(db: Db, analysisId: string, organizationId: string): Promise<AnalysisRow> {
+  // Un id que no es UUID no puede existir: 404, no 500 de Postgres.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(analysisId)) {
+    throw notFound('Análisis no encontrado.');
+  }
   const [row] = await db.select().from(personalizedAnalyses).where(eq(personalizedAnalyses.id, analysisId)).limit(1);
   if (!row) throw notFound('Análisis no encontrado.');
   if (row.organizationId !== organizationId) throw notFound('Análisis no encontrado.');
@@ -97,7 +101,7 @@ async function analysisPayload(db: Db, row: AnalysisRow, tender: TenderRow) {
       .orderBy(desc(tenderVersions.version))
       .limit(1),
   ]);
-  const docNames = new Map(docRows.map((doc) => [doc.id, doc.filename ?? doc.url]));
+  const docNames = new Map(docRows.map((doc) => [doc.id, documentDisplayName(doc.filename, doc.url)]));
   const matrix = (row.data ?? null) as Matrix | null;
   const generic = genericRows[0] ?? null;
   const genericData = (generic?.data ?? null) as {
@@ -248,7 +252,7 @@ export const analysesRoutes: FastifyPluginAsync<RouteOptions> = async (app, opts
       .orderBy(asc(documents.filename), asc(extractedPages.pageNumber));
     const answer = answerDeterministically(
       texto,
-      pages.map((p) => ({ documento: p.documento ?? p.url, pagina: p.pagina, texto: p.texto })),
+      pages.map((p) => ({ documento: documentDisplayName(p.documento, p.url), pagina: p.pagina, texto: p.texto })),
     );
 
     const saved = await d.transaction(async (tx) => {
