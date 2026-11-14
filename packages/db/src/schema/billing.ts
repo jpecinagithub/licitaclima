@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -63,6 +64,9 @@ export const subscriptions = pgTable(
     currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
     canceledAt: timestamp('canceled_at', { withTimezone: true }),
+    /** Unix-seconds del último evento Stripe aplicado. Los eventos más
+     *  antiguos que este se ignoran (tolerancia a eventos fuera de orden). */
+    lastStripeEventAt: bigint('last_stripe_event_at', { mode: 'number' }),
     ...timestamps,
   },
   (t) => [
