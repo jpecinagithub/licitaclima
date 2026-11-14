@@ -32,10 +32,14 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { Pool } from 'pg';
 import { clasificarNicho, resolverProvincia } from '@licitaclima/domain';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+// Carga el .env del repo (si existe) para que `pnpm db:seed` funcione sin
+// exportar DATABASE_URL a mano. No sobrescribe variables ya definidas.
+dotenv.config({ path: join(ROOT, '.env') });
 const SOURCE_PATH = join(ROOT, 'data', 'volume-30d', 'niche_30d.json');
 const MANIFEST_PATH = join(ROOT, 'data', 'seed', 'seed-manifest.json');
 

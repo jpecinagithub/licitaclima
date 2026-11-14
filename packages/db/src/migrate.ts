@@ -1,7 +1,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import dotenv from 'dotenv';
 import { Client } from 'pg';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// Carga el .env del repo (si existe) para que `pnpm db:migrate` funcione sin
+// exportar DATABASE_URL a mano. No sobrescribe variables ya definidas.
+dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
 
 /**
  * Migraciones Drizzle (SQL versionado en ./drizzle).
@@ -12,7 +18,6 @@ import { Client } from 'pg';
  *
  * Uso:  DATABASE_URL=postgres://... pnpm --filter @licitaclima/db migrate
  */
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = join(__dirname, '..', 'drizzle');
 
 export async function migrate(connectionString: string): Promise<string[]> {
