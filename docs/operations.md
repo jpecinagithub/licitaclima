@@ -161,37 +161,110 @@ Runbook de caída:
    borrados registrados después de la fecha del backup (procedimiento
    pendiente de formalizar; ver `docs/security.md` §8).
 
-## 7. Despliegue en Oracle — runbook (NO desplegado)
+## 7. Despliegue en Oracle — DESPLEGADO 2026-11-14
 
-**Estado: sin desplegar. SSH bloqueado el 2026-11-14; el servidor no se ha
-verificado en este turno.** Pasos cuando Jon desbloquee el acceso:
+**Estado: en vivo desde 2026-11-14.** URL pública:
+https://licitaclima.jpecina.duckdns.org (subdominio DuckDNS verificado,
+certificado Let's Encrypt vía Certbot con renovación automática; HTTP
+redirige a HTTPS). Servidor `iadelveloper-server` (Oracle, aarch64, 23 GB
+RAM); acceso SSH por túnel Tailscale
+(`ssh -F ~/.ssh/config 100.102.140.37`); el SSH directo por el proxy 3128
+resetea la conexión (el host `appforge-oracle` no es usable).
 
-1. Verificar el servidor: `uname -m`, RAM/disco, Docker y
-   `docker compose` instalados, puertos 80/443 libres, Caddy o nginx
-   existente, ruta `/opt/licitaclima` (o la que Jon indique).
-2. Copiar el repo (git clone) y el `.env` de producción (nunca por git):
-   `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_SECRETS_KEY`,
-   `WEB_PUBLIC_URL=https://licitaclima.es`,
-   `API_PUBLIC_URL=https://licitaclima.es` (o subdominio de API si lo hay).
-   Stripe y correo solo cuando Jon aporte las claves; LLM solo cuando
-   elija proveedor.
-3. `docker compose build` (verificar que las 3 imágenes compilan; no se
-   han construido nunca) y `docker compose up -d db`, esperar `healthy`,
-   aplicar migraciones (`pnpm db:migrate` desde el checkout del servidor
-   con el `DATABASE_URL` del servidor, o equivalente dentro del contenedor
-   api), `docker compose up -d`.
-4. Crear el admin con la CLI, comprobar `/health/ready` y las 3 rutas
-   públicas, hacer una ingesta manual (`run ingest --feed 643 --max-pages 2`)
-   y un `run-due`.
-5. DNS: `licitaclima.es` → IP del servidor (dominio pendiente de comprar;
-   el prerender usa `https://licitaclima.es` como marcador hasta que Jon
-   confirme el dominio canónico). Caddy en `infra/Caddyfile` hace
-   `reverse_proxy /api/* → :3001` y `/* → :80`.
-6. Backups: cron diario `pg_dump` + `rsync` de pliegos a almacenamiento
-   externo; probar la restauración en el propio Oracle (BD aparte) antes
-   de dar el despliegue por bueno.
-7. No exponer el 5432 públicamente: quitar el mapeo de puertos de `db`
-   en el compose de producción o atarlo a `127.0.0.1`.
+- Checkout: `/opt/licitaclima`, master en `1a7c2bf` (ver `git log`).
+- Servicios (docker compose, proyecto `licitaclima`): `db`
+  (postgres:16-alpine, volumen `licitaclima_licitaclima_pgdata`), `api`,
+  `worker`, `web` (nginx). `restart: unless-stopped` en los 4.
+- Puertos: `api` → `127.0.0.1:3101` (el 3001 del host lo ocupa ERP3),
+  `web` → `127.0.0.1:3100` (el 80 lo usa nginx del host), `db` SIN puerto
+  publicado (solo red interna de compose).
+- nginx del host: `/etc/nginx/sites-enabled/licitaclima` — `/api/` y
+  `/health/` → 127.0.0.1:3101, `/` → 127.0.0.1:3100. `nginx -t`
+  obligatorio antes de recargar.
+- `.env` de producción en `/opt/licitaclima/.env` (0600, nunca en git):
+  `SESSION_SECRET` y `ADMIN_SECRETS_KEY` generados con
+  `openssl rand -hex 32`;
+  `DATABASE_URL=postgres://licitaclima:licitaclima@db:5432/licitaclima`;
+  `WEB_PUBLIC_URL` / `API_PUBLIC_URL` / `LICITACLIMA_SITE_URL` =
+  `https://licitaclima.jpecina.duckdns.org`. Sin Stripe, sin correo real
+  (outbox), LLM `none`.
+- Admin: `admin@licitaclima.es` (creado por CLI 2026-11-14, TOTP activo);
+  contraseña SOLO en `/opt/licitaclima/.admin-credentials` (0600, fuera
+  de git).
+- Worker: el CMD base sin args solo imprime la ayuda y sale; el override
+  de producción le pasa `schedule` (cola 15 min, ingesta 6 h, digest
+  lunes 09:00 Europe/Madrid).
+
+### Archivos solo en el servidor (no commitear)
+
+- `docker-compose.prod.yml` (override: puertos, `schedule`, volumen
+  `licitaclima_documents` para los pliegos).
+- `docker-compose.yml` MODIFICADO en este checkout (sin commitear): se
+  quitaron los `ports:` de `db`, `api` y `web` porque el override no
+  puede vaciar listas (`ports: []` no anula la base; compose fusiona
+  las listas). Antes de un `git pull` que toque ese fichero, guardar el
+  cambio (`git stash` o re-aplicarlo después).
+- `.env`, `.admin-credentials`, `backup.sh`, `backups/`.
+
+### Despliegue inicial (lo que se hizo 2026-11-14)
+
+1. `git clone https://github.com/jpecinagithub/licitaclima.git
+   /opt/licitaclima` (master `43187b7`).
+2. `.env` + `docker-compose.prod.yml` como arriba.
+3. `docker compose build`: falló en las 3 imágenes por
+   `tsconfig.base.json` (los Dockerfiles no lo copiaban; todos los
+   `tsconfig.json` lo extienden) — corregido en el repo (commit
+   `d0aa4aa`) y vuelto a compilar: `licitaclima-api` 415 MB,
+   `licitaclima-worker` 380 MB, `licitaclima-web` 63 MB.
+4. `up -d db` (healthy) → migraciones 0000–0002 → seed: 913 tenders,
+   38 tablas.
+5. `up -d` completo; `/health/ready` →
+   `{"status":"ok","db":"ok","llm":"none","stripe":"pending","email":"pending"}`.
+6. Ingesta manual `run ingest --feed 643 --max-pages 2`: 1.002 entradas,
+   0 nuevas, 17 rectificadas. `run-due --limit 10`: 9 done, 1 failed
+   transitorio (sin rastro en la tabla de jobs: 0 failed, sin
+   `last_error`; reintento automático hasta 5 intentos).
+7. Admin creado por CLI.
+8. nginx + `certbot --nginx -d licitaclima.jpecina.duckdns.org`
+   (reutiliza la cuenta existente).
+9. La web devolvía 404 en rutas no prerenderadas (`/acceso`, `/app/*`,
+   `/admin/*`; el magic link aterriza en `/acceso/confirmar`) —
+   corregido con fallback SPA en el nginx del contenedor
+   (`infra/docker/web-nginx.conf`, commit `1a7c2bf`) y reconstruida solo
+   la imagen web.
+10. Backup: `backup.sh` + cron diario 03:30 (para no coincidir con el
+    backup de NEXUS de las 03:00); primer backup 2026-11-14 (dump 772 KB
+    + pliegos 31,8 MB) y restauración probada en BD aparte
+    `licitaclima_restore`: 913/913 tenders, BD borrada después.
+    OJO: el crontab de ubuntu contiene además el backup de NEXUS (03:00)
+    y magic-hour-claim (09:00 y 10:30): no reemplazarlo entero con
+    `echo ... | crontab -`; editar por líneas (el 2026-11-14 se borró
+    por accidente y se restauró desde el syslog).
+
+### Anomalías observadas (causa raíz sin resolver)
+
+- El bind de `127.0.0.1:5432` fallaba de forma reproducible al crear el
+  endpoint de `db` («address already in use») aunque nada escucha en el
+  5432 (`ss`, `/proc/net/tcp`, sin docker-proxy en ese puerto; un
+  `python3 bind` y un `docker run -p 127.0.0.1:5432:80` manual sí
+  enlazan). Mitigado quitando el mapeo de `db` (mejor que lo que pedía
+  el runbook). Si reaparece con 3100/3101, revisar el daemon de Docker.
+- Un `docker compose run` recreó `db` y lo dejó sin red (`networks={}`,
+  DNS `db` sin resolver): se resolvió con `down` + `up -d db` y usando
+  `run --no-deps` para las tareas puntuales.
+- Las salidas largas por SSH se cortan ~60 s (`client_loop: send
+  disconnect: Broken pipe`): los trabajos largos (ingesta, run-due) se
+  lanzan con `nohup ... &` y se consulta el log después.
+
+### Redesplegar
+
+```bash
+cd /opt/licitaclima
+git pull --ff-only   # ojo: docker-compose.yml modificado en este checkout (ver arriba)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+curl https://licitaclima.jpecina.duckdns.org/health/ready
+```
 
 ## 8. Costes operativos
 
