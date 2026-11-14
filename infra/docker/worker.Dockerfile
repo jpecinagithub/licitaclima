@@ -6,7 +6,7 @@
 FROM node:24-alpine
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10 --activate
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/worker/ apps/worker/
 RUN pnpm install --frozen-lockfile
