@@ -1,4 +1,4 @@
-// LicitaClima worker — orquestador de trabajos (Fase C).
+// LicitaClima worker — orquestador de trabajos (Fases C + D).
 //
 // Uso:
 //   DATABASE_URL=postgres://licitaclima:licitaclima@localhost:5432/licitaclima \
@@ -7,14 +7,19 @@
 //   ... start -- run-due            (ejecuta los trabajos pendientes, un lote)
 //   ... start -- enqueue-ingest     (encola la ingesta de los dos feeds)
 //   ... start -- digest --org <id>  (resumen semanal de una organización)
+//   ... start -- run billing-reconcile | run billing-events | run email-outbox
+//   ... start -- schedule           (demonio: cola cada 15 min, ingesta cada
+//                                    6 h, conciliación diaria, digest semanal
+//                                    los lunes 09:00 Europe/Madrid)
 //
-// La cadencia (ingesta cada 6 h) la lleva el planificador externo (cron);
-// el worker ejecuta un lote por invocación y sale. Sin DATABASE_URL usa el
-// store en memoria (no persistente) y lo avisa.
+// Sin DATABASE_URL usa el store en memoria (no persistente) y lo avisa; los
+// jobs de Fase D (billing-*, email-outbox) requieren DATABASE_URL.
 
+import { createDb, createPool, type Db } from '@licitaclima/db';
 import { createStoreFromEnv } from './db.js';
 import { dispatchJob, enqueueIngestBothFeeds, runDueJobs, type JobType } from './jobs/index.js';
 import { runWeeklyDigest } from './jobs/digest-weekly.js';
+import { runScheduler } from './schedule.js';
 
 function argValue(argv: string[], name: string): string | undefined {
   const idx = argv.indexOf(name);
@@ -26,6 +31,8 @@ async function main(): Promise<void> {
   const command = argv[0];
   const store = await createStoreFromEnv();
   await store.ensureSchema();
+  const databaseUrl = process.env.DATABASE_URL;
+  const db: Db | undefined = databaseUrl ? createDb(createPool(databaseUrl)) : undefined;
 
   if (command === 'run') {
     const type = argv[1] as JobType;
@@ -38,12 +45,14 @@ async function main(): Promise<void> {
     if (tenderId) payload['tenderId'] = tenderId;
     const org = argValue(argv, '--org');
     if (org) payload['organizationId'] = org;
-    const result = await dispatchJob(store, type, payload);
+    const limit = argValue(argv, '--limit');
+    if (limit) payload['limit'] = Number(limit);
+    const result = await dispatchJob(store, type, payload, { db });
     console.log(JSON.stringify({ job: type, result }, null, 2));
     return;
   }
   if (command === 'run-due') {
-    const result = await runDueJobs(store, Number(argValue(argv, '--limit') ?? 10));
+    const result = await runDueJobs(store, Number(argValue(argv, '--limit') ?? 10), { db });
     console.log(JSON.stringify(result, null, 2));
     return;
   }
@@ -59,11 +68,17 @@ async function main(): Promise<void> {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
+  if (command === 'schedule') {
+    if (!db) throw new Error('schedule requiere DATABASE_URL');
+    await runScheduler(store, db);
+    return;
+  }
   console.log([
     'LicitaClima worker — uso:',
     '  run ingest --feed 643|1044 [--max-pages N] | run documents --tender <id> | run extract --tender <id>',
     '  run analyze --tender <id> | run publish --tender <id> | run alerts --tender <id>',
-    '  run digest-weekly --org <id> | run-due [--limit N] | enqueue-ingest | digest --org <id>',
+    '  run digest-weekly --org <id> | run billing-reconcile | run billing-events [--limit N] | run email-outbox [--limit N]',
+    '  run-due [--limit N] | enqueue-ingest | digest --org <id> | schedule',
   ].join('\n'));
 }
 

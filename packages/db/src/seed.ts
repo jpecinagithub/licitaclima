@@ -33,7 +33,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
-import { clasificarNicho, resolverProvincia } from '@licitaclima/integrations';
+import { clasificarNicho, resolverProvincia } from '@licitaclima/domain';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const SOURCE_PATH = join(ROOT, 'data', 'volume-30d', 'niche_30d.json');

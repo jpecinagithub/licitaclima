@@ -64,3 +64,5 @@ export interface CompanyProfile {
   certificacionesDeclaradas: string[];
   preferencias: string | null;
 }
+export * from './classify.js';
+export * from './province.js';

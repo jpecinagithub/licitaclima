@@ -3,7 +3,7 @@
 // (docs/fase-c.md) y con el test de integración de pg-store.
 import { describe, expect, it } from 'vitest';
 import { expedienteSeed, loadNicheRows, pipelineInicialSeed } from './seed.js';
-import { resolverProvincia } from '@licitaclima/integrations';
+import { resolverProvincia } from '@licitaclima/domain';
 
 describe('seed: datos reales del pull de 30 días', () => {
   it('carga los 913 expedientes de nicho', () => {

@@ -23,8 +23,20 @@ export function createLlmProvider(): LlmProvider {
 }
 
 export * from './atom.js';
-export * from './classify.js';
-export * from './province.js';
+// classify/province viven en @licitaclima/domain desde Fase F (eran funciones
+// puras y @licitaclima/db las necesitaba: el ciclo db<->integrations impedía
+// compilar los paquetes a dist en orden topológico). Se re-exportan aquí
+// para no romper la API pública de integrations.
+export {
+  clasificarNicho, cpvNichoPresentes, esPublicable, palabrasClaveEnTitulo, preclasificar,
+  CPV_NICHO, PALABRAS_CLAVE_NICHO,
+} from '@licitaclima/domain';
+export type { ClaseNicho, ClasificacionNicho } from '@licitaclima/domain';
+export {
+  normalizarTexto, provinciaDesdeNuts, provinciaDesdeNombreFeed, provinciaEnTexto, resolverProvincia,
+  NUTS2_UNIPROVINCIAL_A_PROVINCIA, NUTS3_A_PROVINCIA, NUTS_SIN_PROVINCIA,
+} from '@licitaclima/domain';
+export type { ProvinciaResuelta } from '@licitaclima/domain';
 export * from './ssrf.js';
 export * from './pdf.js';
 export * from './stripe.js';

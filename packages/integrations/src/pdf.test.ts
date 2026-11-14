@@ -36,7 +36,7 @@ function mockFetchPdf(body: Buffer, contentType = 'application/pdf'): typeof fet
       },
     });
     return new Response(stream, { status: 200, headers: { 'content-type': contentType } });
-  }) as typeof fetch;
+  }) as unknown as typeof fetch;
 }
 
 const lookupOk = async () => [{ address: '185.23.56.10' }];
@@ -69,7 +69,7 @@ describe('downloadPdf', () => {
 
   it('bloquea la redirección a un dominio fuera de la allowlist', async () => {
     const fetchFn = (async () =>
-      new Response(null, { status: 302, headers: { location: 'https://example.com/malicioso.pdf' } })) as typeof fetch;
+      new Response(null, { status: 302, headers: { location: 'https://example.com/malicioso.pdf' } })) as unknown as typeof fetch;
     await expect(downloadPdf(url, { fetchFn, lookupFn: lookupOk })).rejects.toThrow(/allowlist/);
   });
 
